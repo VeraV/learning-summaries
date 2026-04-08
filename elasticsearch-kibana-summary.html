@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elasticsearch & Kibana - Learning Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #0f1117;
+    --surface: #181b24;
+    --surface-raised: #1e222d;
+    --border: #2a2f3c;
+    --text: #e4e6ed;
+    --text-muted: #8b90a0;
+    --accent: #00bcd4;
+    --accent-soft: rgba(0, 188, 212, 0.12);
+    --elastic-yellow: #fec514;
+    --elastic-yellow-soft: rgba(254, 197, 20, 0.1);
+    --kibana-pink: #f04e98;
+    --kibana-pink-soft: rgba(240, 78, 152, 0.1);
+    --green: #00c9a7;
+    --green-soft: rgba(0, 201, 167, 0.1);
+    --orange: #ff8a50;
+    --orange-soft: rgba(255, 138, 80, 0.1);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    padding: 40px 20px;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+    padding: 48px 32px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(0, 188, 212, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(254, 197, 20, 0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .header-badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .header h1 span.es { color: var(--elastic-yellow); }
+  .header h1 span.kb { color: var(--kibana-pink); }
+
+  .header p {
+    color: var(--text-muted);
+    font-size: 15px;
+    position: relative;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 40px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .section-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover {
+    border-color: #3a3f50;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card p, .card li {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card ul li {
+    padding: 4px 0 4px 20px;
+    position: relative;
+  }
+
+  .card ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  /* Concept grid */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 600px) {
+    .concept-grid { grid-template-columns: 1fr; }
+    .header h1 { font-size: 28px; }
+    .analogy-flow { flex-direction: column; }
+    .analogy-flow .arrow { transform: rotate(90deg); }
+  }
+
+  .concept-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .concept-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .concept-card .value {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .es-color { color: var(--elastic-yellow); }
+  .kb-color { color: var(--kibana-pink); }
+  .green-color { color: var(--green); }
+  .orange-color { color: var(--orange); }
+  .accent-color { color: var(--accent); }
+
+  .es-bg { background: var(--elastic-yellow-soft); }
+  .kb-bg { background: var(--kibana-pink-soft); }
+  .green-bg { background: var(--green-soft); }
+  .orange-bg { background: var(--orange-soft); }
+  .accent-bg { background: var(--accent-soft); }
+
+  /* Code blocks */
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    overflow-x: auto;
+    margin: 12px 0;
+    color: var(--text-muted);
+  }
+
+  .code-block .cmd { color: var(--accent); }
+  .code-block .flag { color: var(--elastic-yellow); }
+  .code-block .url { color: var(--green); }
+  .code-block .json { color: var(--kibana-pink); }
+  .code-block .comment { color: #555a6e; font-style: italic; }
+
+  /* Analogy box */
+  .analogy-box {
+    background: var(--surface-raised);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 12px 12px 0;
+    padding: 18px 22px;
+    margin: 16px 0;
+  }
+
+  .analogy-box .analogy-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .analogy-box p {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Flow diagrams */
+  .analogy-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .flow-box {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .arrow {
+    color: var(--text-muted);
+    font-size: 18px;
+  }
+
+  /* Waterfall */
+  .waterfall {
+    padding: 12px 0;
+  }
+
+  .waterfall-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .waterfall-label {
+    width: 160px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    text-align: right;
+    padding-right: 14px;
+  }
+
+  .waterfall-bar {
+    height: 22px;
+    border-radius: 4px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+  }
+
+  /* Key takeaway */
+  .takeaway {
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(254, 197, 20, 0.06) 100%);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+    border-radius: 16px;
+    padding: 28px 28px;
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .takeaway h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 12px;
+  }
+
+  .takeaway p {
+    color: var(--text-muted);
+    font-size: 14px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Learning Session Summary</div>
+    <h1><span class="es">Elasticsearch</span> & <span class="kb">Kibana</span></h1>
+    <p>Everything you learned — from zero to searching, visualising, and investigating</p>
+  </div>
+
+  <!-- Section 1: What Are They -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon es-bg"><span class="es-color">①</span></div>
+      <h2>What Are They?</h2>
+    </div>
+    
+    <div class="concept-grid">
+      <div class="concept-card">
+        <div class="label es-color">Elasticsearch</div>
+        <div class="value">A search and analytics engine. Stores JSON documents and makes them searchable in milliseconds. Not a traditional database — it's optimised for finding and analysing data fast.</div>
+      </div>
+      <div class="concept-card">
+        <div class="label kb-color">Kibana</div>
+        <div class="value">The visual interface for Elasticsearch. Build dashboards, explore data, run queries — all without writing code. Like Prisma Studio is to PostgreSQL.</div>
+      </div>
+    </div>
+
+    <div class="analogy-box">
+      <div class="analogy-label">Key analogy</div>
+      <p>Elasticsearch is a <strong>phone book</strong> — it holds data, but its real job is helping you find things fast. The actual records (source of truth) live in your primary database like PostgreSQL.</p>
+    </div>
+
+    <div class="analogy-flow">
+      <div class="flow-box" style="border-color: var(--elastic-yellow);">PostgreSQL<br><span style="font-size:11px;color:var(--text-muted);">Source of truth</span></div>
+      <div class="arrow">→</div>
+      <div class="flow-box" style="border-color: var(--accent);">Elasticsearch<br><span style="font-size:11px;color:var(--text-muted);">Search copy</span></div>
+      <div class="arrow">→</div>
+      <div class="flow-box" style="border-color: var(--kibana-pink);">Kibana<br><span style="font-size:11px;color:var(--text-muted);">Visual layer</span></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 2: Core Concepts -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon accent-bg"><span class="accent-color">②</span></div>
+      <h2>Core Concepts</h2>
+    </div>
+
+    <div class="concept-grid">
+      <div class="concept-card">
+        <div class="label accent-color">Cluster</div>
+        <div class="value">The entire Elasticsearch system. One per project/domain. Like the whole library building.</div>
+      </div>
+      <div class="concept-card">
+        <div class="label accent-color">Node</div>
+        <div class="value">A server within the cluster. More nodes = faster and more redundant. Like floors in the building.</div>
+      </div>
+      <div class="concept-card">
+        <div class="label accent-color">Index</div>
+        <div class="value">A collection of documents — equivalent to a database table. Like a bookshelf.</div>
+      </div>
+      <div class="concept-card">
+        <div class="label accent-color">Document</div>
+        <div class="value">A single JSON record within an index. Flexible — each document can have different fields.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 3: Docker Setup -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon green-bg"><span class="green-color">③</span></div>
+      <h2>Docker Setup</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What you did</div>
+      <p>Created a <code style="color:var(--accent);">docker-compose.yml</code> that runs Elasticsearch (port 9200) and Kibana (port 5601) in containers. Docker keeps your system clean — nothing is "installed," just run and stop.</p>
+    </div>
+
+    <div class="code-block">
+      <span class="comment"># Start everything</span><br>
+      <span class="cmd">docker compose</span> <span class="flag">up</span><br><br>
+      <span class="comment"># Check if ES is running</span><br>
+      <span class="cmd">curl</span> <span class="url">http://localhost:9200</span><br><br>
+      <span class="comment"># Stop everything</span><br>
+      <span class="cmd">docker compose</span> <span class="flag">down</span><br><br>
+      <span class="comment"># See running containers</span><br>
+      <span class="cmd">docker</span> <span class="flag">ps</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 4: curl & REST API -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon orange-bg"><span class="orange-color">④</span></div>
+      <h2>Talking to Elasticsearch (curl)</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-title">curl command anatomy</div>
+      <div class="code-block">
+        <span class="cmd">curl</span> <span class="flag">-X POST</span> <span class="url">"http://localhost:9200/my-index/_doc"</span> \<br>
+        &nbsp;&nbsp;<span class="flag">-H</span> <span class="json">"Content-Type: application/json"</span> \<br>
+        &nbsp;&nbsp;<span class="flag">-d</span> <span class="json">'{"name": "John", "city": "Lisbon"}'</span>
+      </div>
+      <ul>
+        <li><strong>curl</strong> — sends HTTP requests from terminal</li>
+        <li><strong>-X POST/PUT/DELETE</strong> — HTTP method (GET is default)</li>
+        <li><strong>-H</strong> — headers (multiple allowed)</li>
+        <li><strong>-d</strong> — request body (your data)</li>
+        <li><strong>?pretty</strong> — formats JSON response nicely</li>
+        <li><strong>\</strong> — continue command on next line</li>
+        <li>Always <strong>quote URLs</strong> with ? or & characters</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Essential operations</div>
+      <div class="code-block">
+        <span class="comment"># Create an index</span><br>
+        <span class="cmd">curl</span> <span class="flag">-X PUT</span> <span class="url">"http://localhost:9200/my-index"</span><br><br>
+        <span class="comment"># Add a document</span><br>
+        <span class="cmd">curl</span> <span class="flag">-X POST</span> <span class="url">"http://localhost:9200/my-index/_doc"</span> ...<br><br>
+        <span class="comment"># Search everything</span><br>
+        <span class="cmd">curl</span> <span class="url">"http://localhost:9200/my-index/_search?pretty"</span><br><br>
+        <span class="comment"># Quick URL search</span><br>
+        <span class="cmd">curl</span> <span class="url">"http://localhost:9200/my-index/_search?pretty&q=city:Lisbon"</span><br><br>
+        <span class="comment"># List all indices</span><br>
+        <span class="cmd">curl</span> <span class="url">"http://localhost:9200/_cat/indices?v"</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 5: Query DSL -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon es-bg"><span class="es-color">⑤</span></div>
+      <h2>Query DSL vs KQL</h2>
+    </div>
+
+    <div class="concept-grid">
+      <div class="concept-card">
+        <div class="label es-color">Query DSL</div>
+        <div class="value">JSON-based, used by developers in code and API calls. Powerful, verbose, handles complex queries.</div>
+      </div>
+      <div class="concept-card">
+        <div class="label kb-color">KQL</div>
+        <div class="value">Simple text syntax for Kibana's search bar. Gets translated to Query DSL behind the scenes.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Query DSL building blocks you learned</div>
+      <ul>
+        <li><strong>match</strong> — find documents matching a value</li>
+        <li><strong>bool + must</strong> — combine conditions with AND</li>
+        <li><strong>bool + should</strong> — combine conditions with OR</li>
+        <li><strong>bool + must_not</strong> — exclude results (NOT)</li>
+        <li><strong>bool + filter</strong> — like must but skips scoring (faster)</li>
+        <li><strong>range + gt/gte/lt/lte</strong> — numeric and date ranges</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Relevance scoring</div>
+      <p><strong>_score</strong> ranks how well each document matches your query. Use <code style="color:var(--accent);">must</code> when relevance matters (text search). Use <code style="color:var(--accent);">filter</code> for exact yes/no conditions (city, status, age) — it's faster because it skips scoring.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 6: Kibana -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon kb-bg"><span class="kb-color">⑥</span></div>
+      <h2>Kibana Navigation</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Dashboard</div>
+      <p>Collection of visualisations showing different views of the same data. Supports cross-filtering — click on one chart and all others update. Start here when investigating problems (helicopter view).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🔍 Discover</div>
+      <p>Raw data explorer — see individual documents, expand entries, run KQL queries. Go here to dig into details after spotting a problem on the dashboard (ground investigation).</p>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 Visualise Library</div>
+      <p>Build individual charts (bar, line, pie, etc.) — the building blocks that go onto dashboards.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🎨 Canvas</div>
+      <p>Presentation-style reports with custom layouts and branding. Like a mix of dashboard and PowerPoint.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">🗺️ Maps</div>
+      <p>Dedicated section for complex geographic visualisations with multiple layers.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">⚡ APM (Traces)</div>
+      <p>Distributed tracing — shows waterfall diagrams of requests flowing across microservices. Requires APM agents installed in your application code. Read the waterfall bottom-up to find the real bottleneck.</p>
+    </div>
+
+    <div class="analogy-box">
+      <div class="analogy-label">Important</div>
+      <p>Filters do NOT carry across sections. Each tab has its own independent filters. But within a Dashboard, all charts share the same filters (cross-filtering).</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 7: Annotations -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon green-bg"><span class="green-color">⑦</span></div>
+      <h2>Annotations (What You Built)</h2>
+    </div>
+
+    <div class="card">
+      <p>You created a separate <code style="color:var(--accent);">deployments</code> index with timestamp, service, and version fields. Then added an annotation layer to a chart that pulls from this index, showing vertical lines on the timeline wherever a deployment happened.</p>
+      <div style="margin-top:12px;">
+        <span class="tag es-bg es-color">1. Create deployments index</span>
+        <span class="tag accent-bg accent-color">2. Create data view in Kibana</span>
+        <span class="tag kb-bg kb-color">3. Add annotation layer to chart</span>
+        <span class="tag green-bg green-color">4. Set to Custom Query</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 8: Investigation Flow -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon orange-bg"><span class="orange-color">⑧</span></div>
+      <h2>Investigating a Problem</h2>
+    </div>
+
+    <div class="analogy-flow" style="flex-direction: column; gap: 8px;">
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--elastic-yellow);text-align:left;">
+        <span class="es-color" style="font-weight:700;">1. Dashboard</span><br>
+        <span style="font-size:12px;color:var(--text-muted);">Spot the anomaly — when did it start? Spike in errors? Drop in traffic?</span>
+      </div>
+      <div class="arrow" style="transform:rotate(90deg);">→</div>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--accent);text-align:left;">
+        <span class="accent-color" style="font-weight:700;">2. Dashboard + Cross-filters</span><br>
+        <span style="font-size:12px;color:var(--text-muted);">Narrow down — which service? Which endpoint? Which server?</span>
+      </div>
+      <div class="arrow" style="transform:rotate(90deg);">→</div>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--kibana-pink);text-align:left;">
+        <span class="kb-color" style="font-weight:700;">3. Discover</span><br>
+        <span style="font-size:12px;color:var(--text-muted);">Dig into individual documents — error messages, exact timestamps, raw details</span>
+      </div>
+      <div class="arrow" style="transform:rotate(90deg);">→</div>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--green);text-align:left;">
+        <span class="green-color" style="font-weight:700;">4. Cross-index correlation</span><br>
+        <span style="font-size:12px;color:var(--text-muted);">Compare with infrastructure metrics, deployment logs, database performance</span>
+      </div>
+      <div class="arrow" style="transform:rotate(90deg);">→</div>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--orange);text-align:left;">
+        <span class="orange-color" style="font-weight:700;">5. Root cause identified</span><br>
+        <span style="font-size:12px;color:var(--text-muted);">Annotations on charts show deployments that correlate with the problem</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 9: APM Waterfall -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon kb-bg"><span class="kb-color">⑨</span></div>
+      <h2>Distributed Tracing (APM)</h2>
+    </div>
+
+    <div class="card">
+      <div class="card-title">How trace data flows</div>
+      <div class="analogy-flow">
+        <div class="flow-box" style="font-size:12px;">Your App<br><span style="color:var(--text-muted);font-size:10px;">+ APM Agent</span></div>
+        <div class="arrow">→</div>
+        <div class="flow-box" style="font-size:12px;">APM Server</div>
+        <div class="arrow">→</div>
+        <div class="flow-box" style="font-size:12px;">Elasticsearch</div>
+        <div class="arrow">→</div>
+        <div class="flow-box" style="font-size:12px;">Kibana APM</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Reading a waterfall — go bottom-up!</div>
+      <div class="waterfall">
+        <div class="waterfall-row">
+          <div class="waterfall-label">Browser</div>
+          <div class="waterfall-bar" style="width:100%;background:var(--accent);">598ms</div>
+        </div>
+        <div class="waterfall-row">
+          <div class="waterfall-label">&nbsp;&nbsp;API Gateway</div>
+          <div class="waterfall-bar" style="width:67%;background:var(--elastic-yellow);">400ms</div>
+        </div>
+        <div class="waterfall-row">
+          <div class="waterfall-label">&nbsp;&nbsp;&nbsp;&nbsp;Payment Svc</div>
+          <div class="waterfall-bar" style="width:50%;background:var(--kibana-pink);">300ms</div>
+        </div>
+        <div class="waterfall-row">
+          <div class="waterfall-label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DB: SELECT</div>
+          <div class="waterfall-bar" style="width:25%;background:var(--orange);">150ms ← bottleneck</div>
+        </div>
+      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-top:8px;">The outer bars are waiting for inner bars. The deepest bar doing actual work is your real bottleneck.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Section 10: Golden Rule -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(255,255,255,0.05);"><span style="color:var(--text);">⑩</span></div>
+      <h2>The Golden Rule</h2>
+    </div>
+
+    <div class="takeaway">
+      <h3>Kibana can only show what exists in your documents</h3>
+      <p>Every chart, metric, map, and trace in Kibana comes from fields inside your Elasticsearch documents. No field = no visualisation. The quality of your monitoring depends entirely on what data you collect. <strong>Discover</strong> is the best place to check what fields are available — it is your source of truth.</p>
+    </div>
+  </div>
+
+  <!-- Parallels -->
+  <div class="card" style="margin-top: 32px;">
+    <div class="card-title">🔄 Parallels you discovered</div>
+    <ul>
+      <li><strong>PostgreSQL + psql + Prisma Studio</strong> ≈ <strong>Elasticsearch + curl + Kibana</strong></li>
+      <li><strong>MongoDB</strong> — same family (document store) but general-purpose DB; Elasticsearch is search-optimised</li>
+      <li><strong>AWS OpenSearch</strong> — the same Elasticsearch, managed by AWS (forked, slightly diverging)</li>
+      <li>Sync is always <strong>one-way: Primary DB → Elasticsearch</strong>. Never update ES directly.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>
