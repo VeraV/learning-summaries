@@ -1,890 +1,1058 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bash & Zsh - Learning Summary</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --bg: #0f1117;
-    --surface: #181b24;
-    --surface-raised: #1e222d;
-    --border: #2a2f3c;
-    --text: #e4e6ed;
-    --text-muted: #8b90a0;
-    --accent: #00bcd4;
-    --accent-soft: rgba(0, 188, 212, 0.12);
-    --bash-green: #00c9a7;
-    --bash-green-soft: rgba(0, 201, 167, 0.1);
-    --zsh-purple: #b48eff;
-    --zsh-purple-soft: rgba(180, 142, 255, 0.1);
-    --yellow: #fec514;
-    --yellow-soft: rgba(254, 197, 20, 0.1);
-    --orange: #ff8a50;
-    --orange-soft: rgba(255, 138, 80, 0.1);
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    padding: 40px 20px;
-  }
-
-  .container {
-    max-width: 820px;
-    margin: 0 auto;
-  }
-
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 56px;
-    padding: 48px 32px;
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at 30% 50%, rgba(0, 201, 167, 0.06) 0%, transparent 50%),
-                radial-gradient(circle at 70% 50%, rgba(180, 142, 255, 0.04) 0%, transparent 50%);
-    pointer-events: none;
-  }
-
-  .header-badge {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 6px 16px;
-    border-radius: 100px;
-    margin-bottom: 20px;
-    position: relative;
-  }
-
-  .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 38px;
-    font-weight: 400;
-    line-height: 1.2;
-    margin-bottom: 12px;
-    position: relative;
-  }
-
-  .header h1 span.bash { color: var(--bash-green); }
-  .header h1 span.zsh  { color: var(--zsh-purple); }
-
-  .header p {
-    color: var(--text-muted);
-    font-size: 15px;
-    position: relative;
-  }
-
-  /* Section */
-  .section { margin-bottom: 40px; }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .section-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .section-header h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    font-weight: 400;
-  }
-
-  /* Cards */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px 24px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-  }
-
-  .card:hover { border-color: #3a3f50; }
-
-  .card-title {
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card p, .card li {
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1.7;
-  }
-
-  .card ul { list-style: none; padding: 0; }
-
-  .card ul li {
-    padding: 4px 0 4px 20px;
-    position: relative;
-  }
-
-  .card ul li::before {
-    content: '→';
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-    font-size: 13px;
-  }
-
-  /* Concept grid */
-  .concept-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  @media (max-width: 600px) {
-    .concept-grid { grid-template-columns: 1fr; }
-    .header h1 { font-size: 28px; }
-    .analogy-flow { flex-direction: column; }
-    .analogy-flow .arrow { transform: rotate(90deg); }
-  }
-
-  .concept-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 20px;
-  }
-
-  .concept-card .label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .concept-card .value {
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  .bash-color  { color: var(--bash-green); }
-  .zsh-color   { color: var(--zsh-purple); }
-  .yellow-color { color: var(--yellow); }
-  .orange-color { color: var(--orange); }
-  .accent-color { color: var(--accent); }
-
-  .bash-bg   { background: var(--bash-green-soft); }
-  .zsh-bg    { background: var(--zsh-purple-soft); }
-  .yellow-bg { background: var(--yellow-soft); }
-  .orange-bg { background: var(--orange-soft); }
-  .accent-bg { background: var(--accent-soft); }
-
-  /* Code blocks */
-  .code-block {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.8;
-    overflow-x: auto;
-    margin: 12px 0;
-    color: var(--text-muted);
-  }
-
-  .code-block .cmd     { color: var(--accent); }
-  .code-block .flag    { color: var(--yellow); }
-  .code-block .val     { color: var(--bash-green); }
-  .code-block .str     { color: var(--zsh-purple); }
-  .code-block .comment { color: #555a6e; font-style: italic; }
-  .code-block .var     { color: var(--orange); }
-
-  /* Analogy box */
-  .analogy-box {
-    background: var(--surface-raised);
-    border-left: 3px solid var(--accent);
-    border-radius: 0 12px 12px 0;
-    padding: 18px 22px;
-    margin: 16px 0;
-  }
-
-  .analogy-box .analogy-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .analogy-box p {
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  /* Flow diagrams */
-  .analogy-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px 0;
-    flex-wrap: wrap;
-  }
-
-  .flow-box {
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    border: 1px solid var(--border);
-    background: var(--surface);
-  }
-
-  .arrow {
-    color: var(--text-muted);
-    font-size: 18px;
-  }
-
-  /* Tag */
-  .tag {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 6px;
-    margin-right: 4px;
-    margin-bottom: 4px;
-  }
-
-  /* Divider */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 40px 0;
-  }
-
-  /* Table */
-  .ref-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    margin: 12px 0;
-  }
-
-  .ref-table th {
-    background: var(--surface-raised);
-    color: var(--text-muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .ref-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-muted);
-    vertical-align: top;
-  }
-
-  .ref-table tr:last-child td { border-bottom: none; }
-  .ref-table tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .ref-table td:first-child {
-    font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  /* Key takeaway */
-  .takeaway {
-    background: linear-gradient(135deg, rgba(0, 201, 167, 0.08) 0%, rgba(180, 142, 255, 0.06) 100%);
-    border: 1px solid rgba(0, 201, 167, 0.2);
-    border-radius: 16px;
-    padding: 28px;
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .takeaway h3 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 12px;
-  }
-
-  .takeaway p {
-    color: var(--text-muted);
-    font-size: 14px;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
-  code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 1px 6px;
-    border-radius: 4px;
-  }
-</style>
-</head>
-<body>
-<div class="container">
-
-  <!-- Header -->
-  <div class="header">
-    <div class="header-badge">Learning Session Summary</div>
-    <h1><span class="bash">Bash</span> & <span class="zsh">Zsh</span></h1>
-    <p>Everything you learned — shells, scripts, variables, commands, and real-world use</p>
-  </div>
-
-  <!-- Section 1: Shell Basics -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon bash-bg"><span class="bash-color">①</span></div>
-      <h2>Shell Basics</h2>
-    </div>
-
-    <div class="concept-grid">
-      <div class="concept-card">
-        <div class="label bash-color">Bash</div>
-        <div class="value">Bourne Again Shell. The classic Unix shell, default on most Linux systems. Almost every tutorial is written for Bash. Located at <code>/bin/bash</code>.</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bash & Zsh - Learning Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .header::before {
+        background:
+          radial-gradient(circle at 30% 50%, rgba(0, 201, 167, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 70% 50%, rgba(180, 142, 255, 0.04) 0%, transparent 50%);
+      }
+      .header h1 span.bash { color: var(--green); }
+      .header h1 span.zsh { color: var(--purple); }
+      .takeaway {
+        background: linear-gradient(135deg, rgba(0, 201, 167, 0.08) 0%, rgba(180, 142, 255, 0.06) 100%);
+        border: 1px solid rgba(0, 201, 167, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-badge">Learning Session Summary</div>
+        <h1><span class="bash">Bash</span> & <span class="zsh">Zsh</span></h1>
+        <p>
+          Everything you learned — shells, scripts, variables, commands, and
+          real-world use
+        </p>
       </div>
-      <div class="concept-card">
-        <div class="label zsh-color">Zsh</div>
-        <div class="value">Z Shell. Default on macOS since Catalina. Largely compatible with Bash — beginner scripts work identically in both. Located at <code>/bin/zsh</code>.</div>
-      </div>
-    </div>
 
-    <div class="analogy-box">
-      <div class="analogy-label">Key insight</div>
-      <p>Both are installed simultaneously on your Mac. Zsh is your daily driver, but Bash is always available at <code>/bin/bash</code>. Confirm with <code>which bash</code> and <code>which zsh</code>.</p>
-    </div>
-
-    <div class="analogy-flow">
-      <div class="flow-box" style="border-color: var(--zsh-purple);">Terminal opens<br><span style="font-size:11px;color:var(--text-muted);">Default: Zsh</span></div>
-      <div class="arrow">→</div>
-      <div class="flow-box" style="border-color: var(--bash-green);">Type <code>bash</code><br><span style="font-size:11px;color:var(--text-muted);">Nested Bash session</span></div>
-      <div class="arrow">→</div>
-      <div class="flow-box" style="border-color: var(--accent);">Type <code>exit</code><br><span style="font-size:11px;color:var(--text-muted);">Back to Zsh</span></div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 2: Files & Permissions -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon accent-bg"><span class="accent-color">②</span></div>
-      <h2>Files & Permissions</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">The extension means nothing to the OS</div>
-      <p>The <code>.sh</code> extension is a human convention — the OS completely ignores it. A file called <code>script.banana</code> runs the same as <code>script.sh</code>. What matters is the <strong>shebang line</strong> and <strong>execute permission</strong>.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">How <code>./script.sh</code> decides which interpreter to use</div>
-      <div class="analogy-flow" style="flex-direction: column; gap: 8px;">
-        <div class="flow-box" style="width:100%;max-width:480px;border-color:var(--accent);text-align:left;">
-          <span class="accent-color" style="font-weight:700;">Execute permission?</span><br>
-          <span style="font-size:12px;color:var(--text-muted);">If no → "Permission denied". Fix with <code>chmod u+x file.sh</code></span>
+      <!-- Section 1: Shell Basics -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">①</span>
+          </div>
+          <h2>Shell Basics</h2>
         </div>
-        <div class="arrow" style="transform:rotate(90deg);">→</div>
-        <div class="flow-box" style="width:100%;max-width:480px;border-color:var(--bash-green);text-align:left;">
-          <span class="bash-color" style="font-weight:700;">Shebang present?</span><br>
-          <span style="font-size:12px;color:var(--text-muted);">Yes → use that interpreter exactly (e.g. <code>#!/bin/bash</code>, <code>#!/usr/bin/python3</code>)</span>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label green-color">Bash</div>
+            <div class="value">
+              Bourne Again Shell. The classic Unix shell, default on most Linux
+              systems. Almost every tutorial is written for Bash. Located at
+              <code>/bin/bash</code>.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label purple-color">Zsh</div>
+            <div class="value">
+              Z Shell. Default on macOS since Catalina. Largely compatible with
+              Bash — beginner scripts work identically in both. Located at
+              <code>/bin/zsh</code>.
+            </div>
+          </div>
         </div>
-        <div class="arrow" style="transform:rotate(90deg);">→</div>
-        <div class="flow-box" style="width:100%;max-width:480px;border-color:var(--zsh-purple);text-align:left;">
-          <span class="zsh-color" style="font-weight:700;">No shebang?</span><br>
-          <span style="font-size:12px;color:var(--text-muted);">Falls back to current shell (Zsh on your Mac)</span>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Key insight</div>
+          <p>
+            Both are installed simultaneously on your Mac. Zsh is your daily
+            driver, but Bash is always available at <code>/bin/bash</code>.
+            Confirm with <code>which bash</code> and <code>which zsh</code>.
+          </p>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--purple)">
+            Terminal opens<br /><span
+              style="font-size: 11px; color: var(--text-muted)"
+              >Default: Zsh</span
+            >
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--green)">
+            Type <code>bash</code><br /><span
+              style="font-size: 11px; color: var(--text-muted)"
+              >Nested Bash session</span
+            >
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--accent)">
+            Type <code>exit</code><br /><span
+              style="font-size: 11px; color: var(--text-muted)"
+              >Back to Zsh</span
+            >
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Running without execute permission</div>
-      <p>When you call <code>bash script.sh</code> or <code>sh script.sh</code>, you hand the file to the interpreter as a text file to read. The file itself never needs execute permission — the interpreter already has it. The shebang line is also ignored.</p>
-    </div>
+      <div class="divider"></div>
 
-    <div class="card">
-      <div class="card-title">Editors</div>
-      <ul>
-        <li><strong>touch file.sh</strong> — creates an empty file, no editor opens</li>
-        <li><strong>vi file.sh</strong> — opens Vi: <code>i</code> to insert, <code>Esc</code> to stop, <code>:wq</code> save &amp; quit, <code>:q!</code> quit without saving</li>
-        <li><strong>nano file.sh</strong> — beginner-friendly, shows all commands at the bottom of the screen</li>
-      </ul>
-    </div>
-  </div>
+      <!-- Section 2: Files & Permissions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">②</span>
+          </div>
+          <h2>Files & Permissions</h2>
+        </div>
 
-  <div class="divider"></div>
+        <div class="card">
+          <div class="card-title">The extension means nothing to the OS</div>
+          <p>
+            The <code>.sh</code> extension is a human convention — the OS
+            completely ignores it. A file called <code>script.banana</code> runs
+            the same as <code>script.sh</code>. What matters is the
+            <strong>shebang line</strong> and
+            <strong>execute permission</strong>.
+          </p>
+        </div>
 
-  <!-- Section 3: Variables -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon yellow-bg"><span class="yellow-color">③</span></div>
-      <h2>Variables</h2>
-    </div>
+        <div class="card">
+          <div class="card-title">
+            How <code>./script.sh</code> decides which interpreter to use
+          </div>
+          <div class="analogy-flow" style="flex-direction: column; gap: 8px">
+            <div
+              class="flow-box"
+              style="
+                width: 100%;
+                max-width: 480px;
+                border-color: var(--accent);
+                text-align: left;
+              "
+            >
+              <span class="accent-color" style="font-weight: 700"
+                >Execute permission?</span
+              ><br />
+              <span style="font-size: 12px; color: var(--text-muted)"
+                >If no → "Permission denied". Fix with
+                <code>chmod u+x file.sh</code></span
+              >
+            </div>
+            <div class="arrow" style="transform: rotate(90deg)">→</div>
+            <div
+              class="flow-box"
+              style="
+                width: 100%;
+                max-width: 480px;
+                border-color: var(--green);
+                text-align: left;
+              "
+            >
+              <span class="green-color" style="font-weight: 700"
+                >Shebang present?</span
+              ><br />
+              <span style="font-size: 12px; color: var(--text-muted)"
+                >Yes → use that interpreter exactly (e.g.
+                <code>#!/bin/bash</code>, <code>#!/usr/bin/python3</code>)</span
+              >
+            </div>
+            <div class="arrow" style="transform: rotate(90deg)">→</div>
+            <div
+              class="flow-box"
+              style="
+                width: 100%;
+                max-width: 480px;
+                border-color: var(--purple);
+                text-align: left;
+              "
+            >
+              <span class="purple-color" style="font-weight: 700">No shebang?</span
+              ><br />
+              <span style="font-size: 12px; color: var(--text-muted)"
+                >Falls back to current shell (Zsh on your Mac)</span
+              >
+            </div>
+          </div>
+        </div>
 
-    <div class="card">
-      <div class="card-title">Assignment rules</div>
-      <div class="code-block">
-        <span class="comment"># Single word — quotes optional</span><br>
-        <span class="var">country</span>=Pakistan<br><br>
-        <span class="comment"># Value with spaces — quotes required</span><br>
-        <span class="var">city</span>=<span class="str">'New York'</span><br>
-        <span class="var">city</span>=<span class="str">"New York"</span>   <span class="comment"># both work</span><br><br>
-        <span class="comment"># WRONG — Bash treats "Kingdom" as a command</span><br>
-        <span class="var">country</span>=United Kingdom   <span class="comment"># ❌</span>
+        <div class="card">
+          <div class="card-title">Running without execute permission</div>
+          <p>
+            When you call <code>bash script.sh</code> or
+            <code>sh script.sh</code>, you hand the file to the interpreter as a
+            text file to read. The file itself never needs execute permission —
+            the interpreter already has it. The shebang line is also ignored.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Editors</div>
+          <ul>
+            <li>
+              <strong>touch file.sh</strong> — creates an empty file, no editor
+              opens
+            </li>
+            <li>
+              <strong>vi file.sh</strong> — opens Vi: <code>i</code> to insert,
+              <code>Esc</code> to stop, <code>:wq</code> save &amp; quit,
+              <code>:q!</code> quit without saving
+            </li>
+            <li>
+              <strong>nano file.sh</strong> — beginner-friendly, shows all
+              commands at the bottom of the screen
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 3: Variables -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">
+            <span class="yellow-color">③</span>
+          </div>
+          <h2>Variables</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Assignment rules</div>
+          <div class="code-block">
+            <span class="comment"># Single word — quotes optional</span><br />
+            <span class="var">country</span>=Pakistan<br /><br />
+            <span class="comment"># Value with spaces — quotes required</span
+            ><br />
+            <span class="var">city</span>=<span class="str">'New York'</span
+            ><br />
+            <span class="var">city</span>=<span class="str">"New York"</span>
+            <span class="comment"># both work</span><br /><br />
+            <span class="comment"
+              ># WRONG — Bash treats "Kingdom" as a command</span
+            ><br />
+            <span class="var">country</span>=United Kingdom
+            <span class="comment"># ❌</span>
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label purple-color">Single quotes ''</div>
+            <div class="value">
+              Everything is literal. No substitution happens.
+              <code>echo '$name'</code> prints literally <code>$name</code>.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label green-color">Double quotes ""</div>
+            <div class="value">
+              Variables and commands are substituted.
+              <code>echo "$name"</code> prints the value of <code>name</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Python parallel</div>
+          <p>
+            Single quotes <code>''</code> are like Python regular strings.
+            Double quotes <code>""</code> with <code>$</code> substitution are
+            like Python f-strings. All variables are strings by default — even
+            numbers.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Arithmetic</div>
+          <div class="code-block">
+            <span class="var">i</span>=42<br />
+            <span class="cmd">echo</span> <span class="str">$i + 1</span>
+            <span class="comment"># prints: 42 + 1 (literal!)</span><br />
+            <span class="cmd">echo</span> $((<span class="var">i</span> + 1))
+            <span class="comment"># prints: 43 ✓</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 4: Command Substitution -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">④</span>
+          </div>
+          <h2>Command Substitution</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Run a command, use its output inline</div>
+          <div class="code-block">
+            <span class="comment"># Old style — backticks (legacy)</span><br />
+            <span class="cmd">echo</span>
+            <span class="str">"Today is "</span> `<span class="cmd">date</span
+            >`<br /><br />
+            <span class="comment"># Modern style — preferred</span><br />
+            <span class="cmd">echo</span>
+            <span class="str">"Today is $(<span class="cmd">date</span>)"</span>
+          </div>
+          <p>
+            Both produce identical output. Use <code>$()</code> — it's cleaner,
+            easier to read, and can be nested easily.
+          </p>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Python parallel</div>
+          <p>
+            <code>$variable</code> is like <code>f"{variable}"</code> — insert a
+            value. <code>$(command)</code> is like
+            <code>f"{get_date()}"</code> — call something and insert the result.
+            The <code>()</code> signals "execute this".
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Special variables</div>
+          <table class="ref-table">
+            <tr>
+              <th>Variable</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>$?</td>
+              <td>
+                Exit code of the last command (0 = success, anything else =
+                error)
+              </td>
+            </tr>
+            <tr>
+              <td>$$</td>
+              <td>PID of the current process</td>
+            </tr>
+            <tr>
+              <td>$0</td>
+              <td>Name of the script</td>
+            </tr>
+            <tr>
+              <td>$1 … $9</td>
+              <td>Positional arguments passed to the script</td>
+            </tr>
+            <tr>
+              <td>$#</td>
+              <td>Number of arguments</td>
+            </tr>
+            <tr>
+              <td>$@</td>
+              <td>All arguments as separate words</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 5: Operators & Conditions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">⑤</span>
+          </div>
+          <h2>Operators & Conditions</h2>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label accent-color">[ ] — legacy</div>
+            <div class="value">
+              Old style. Crashes on empty variables. Use <code>-a</code> and
+              <code>-o</code> for AND/OR. Avoid in new scripts.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label green-color">[[&nbsp;]] — modern</div>
+            <div class="value">
+              Preferred. Handles empty variables safely. Supports
+              <code>&amp;&amp;</code>, <code>||</code>,
+              <code>==</code> directly.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Numeric comparison operators</div>
+          <table class="ref-table">
+            <tr>
+              <th>Bash</th>
+              <th>Python</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>-eq</td>
+              <td>==</td>
+              <td>equal</td>
+            </tr>
+            <tr>
+              <td>-ne</td>
+              <td>!=</td>
+              <td>not equal</td>
+            </tr>
+            <tr>
+              <td>-lt</td>
+              <td>&lt;</td>
+              <td>less than</td>
+            </tr>
+            <tr>
+              <td>-le</td>
+              <td>&lt;=</td>
+              <td>less than or equal</td>
+            </tr>
+            <tr>
+              <td>-gt</td>
+              <td>&gt;</td>
+              <td>greater than</td>
+            </tr>
+            <tr>
+              <td>-ge</td>
+              <td>&gt;=</td>
+              <td>greater than or equal</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Logical operators</div>
+          <div class="code-block">
+            <span class="comment"># AND, OR, NOT inside [[ ]]</span><br />
+            if [[ <span class="var">$age</span> -ge 18
+            <span class="flag">&amp;&amp;</span>
+            <span class="var">$age</span> -le 65 ]]; then
+            <span class="cmd">echo</span>
+            <span class="str">"working age"</span>; fi<br />
+            if [[ <span class="var">$name</span> ==
+            <span class="str">"John"</span> <span class="flag">||</span>
+            <span class="var">$name</span> ==
+            <span class="str">"Jane"</span> ]]; then ...; fi<br /><br />
+            <span class="comment"
+              ># AND, OR outside conditions — command chaining</span
+            ><br />
+            <span class="cmd">mkdir</span> my_folder
+            <span class="flag">&amp;&amp;</span>
+            <span class="cmd">cd</span> my_folder
+            <span class="comment"># cd only if mkdir succeeded</span><br />
+            <span class="cmd">cd</span> my_folder <span class="flag">||</span>
+            <span class="cmd">echo</span>
+            <span class="str">"folder not found"</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">if / fi structure</div>
+          <div class="code-block">
+            <span class="comment"
+              ># ; before "then" because they're on the same line</span
+            ><br />
+            if [[ <span class="var">$?</span> -ne 0 ]]; then<br />
+            &nbsp;&nbsp;<span class="cmd">echo</span>
+            <span class="str">"Error occurred"</span><br />
+            fi
+            <span class="comment"
+              ># "fi" = "if" backwards — closes the block</span
+            ><br /><br />
+            <span class="comment"># "then" on its own line — no ; needed</span
+            ><br />
+            if [[ <span class="var">$?</span> -ne 0 ]]<br />
+            then<br />
+            &nbsp;&nbsp;<span class="cmd">echo</span>
+            <span class="str">"Error occurred"</span><br />
+            fi
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 6: Redirection & Pipes -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">⑥</span>
+          </div>
+          <h2>Redirection & Pipes</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Data flow symbols</div>
+          <table class="ref-table">
+            <tr>
+              <th>Symbol</th>
+              <th>Meaning</th>
+              <th>Example</th>
+            </tr>
+            <tr>
+              <td>&gt;</td>
+              <td>Redirect output to file (overwrites)</td>
+              <td><code>ls &gt; files.txt</code></td>
+            </tr>
+            <tr>
+              <td>&gt;&gt;</td>
+              <td>Redirect output to file (appends)</td>
+              <td><code>echo hi &gt;&gt; log.txt</code></td>
+            </tr>
+            <tr>
+              <td>&lt;</td>
+              <td>Feed file as input to command</td>
+              <td><code>wc -l &lt; file.txt</code></td>
+            </tr>
+            <tr>
+              <td>|</td>
+              <td>Pipe: output of one command into the next</td>
+              <td><code>cat log | grep error</code></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Mental model</div>
+          <p>
+            Think of <code>&gt;</code> and <code>&lt;</code> as arrows showing
+            the direction of data flow. The pipe <code>|</code> chains small,
+            focused tools together — the Unix philosophy of doing one thing
+            well.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Real example — error report script</div>
+          <div class="code-block">
+            <span class="comment"># Find all errors, save to file</span><br />
+            <span class="cmd">grep</span> <span class="flag">-i</span>
+            <span class="str">"error"</span> /var/log/app.log
+            <span class="flag">&gt;</span> error_report.txt<br /><br />
+            <span class="comment"># Count how many were found</span><br />
+            <span class="cmd">echo</span>
+            <span class="str"
+              >"Found $(<span class="cmd">wc</span>
+              <span class="flag">-l</span> &lt; error_report.txt) errors"</span
+            ><br /><br />
+            <span class="comment"># Same thing in one line using pipe</span
+            ><br />
+            <span class="cmd">grep</span> <span class="flag">-i</span>
+            <span class="str">"error"</span> app.log |
+            <span class="cmd">wc</span> <span class="flag">-l</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Standard streams</div>
+          <p>Every Unix process has two output streams — normal output and error output travel on separate channels so you can redirect them independently.</p>
+          <table class="ref-table">
+            <tr>
+              <th>Stream</th>
+              <th>Number</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>stdout</td>
+              <td>1</td>
+              <td>Normal output</td>
+            </tr>
+            <tr>
+              <td>stderr</td>
+              <td>2</td>
+              <td>Error output</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">/dev/null — the black hole</div>
+          <p>
+            <code>/dev/null</code> is a special file that discards anything written to it. Think of it as a trash can that never fills up — useful when you only care about a command's exit code, not its output.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Silencing output</div>
+          <div class="code-block">
+            <span class="comment"># silence stdout only</span><br />
+            <span class="cmd">command</span> <span class="flag">&gt;</span> /dev/null<br /><br />
+            <span class="comment"># silence stderr only</span><br />
+            <span class="cmd">command</span> <span class="flag">2&gt;</span> /dev/null<br /><br />
+            <span class="comment"># silence both (old style, portable)</span><br />
+            <span class="cmd">command</span> <span class="flag">&gt;</span> /dev/null <span class="flag">2&gt;&amp;1</span><br /><br />
+            <span class="comment"># silence both (modern Bash/Zsh shorthand)</span><br />
+            <span class="cmd">command</span> <span class="flag">&amp;&gt;</span> /dev/null
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Real examples</div>
+          <div class="code-block">
+            <span class="comment"># just check if the remote is reachable — ignore all output</span><br />
+            <span class="cmd">git</span> ls-remote <span class="str">git@github.com:VeraV/repo.git</span> <span class="flag">&amp;&gt;</span> /dev/null<br /><br />
+            <span class="comment"># only care whether grep found something (exit code)</span><br />
+            <span class="cmd">grep</span> <span class="str">"error"</span> app.log <span class="flag">&gt;</span> /dev/null<br /><br />
+            <span class="comment"># hide "No such file" error message</span><br />
+            <span class="cmd">ls</span> fakefolder <span class="flag">2&gt;</span> /dev/null<br /><br />
+            <span class="comment"># save stdout to file, silence errors</span><br />
+            <span class="cmd">curl</span> <span class="url">https://api.example.com</span> <span class="flag">&gt;</span> response.json <span class="flag">2&gt;</span> /dev/null<br /><br />
+            <span class="comment"># combine with tee — log output and terminal, drop errors</span><br />
+            <span class="cmd">command</span> <span class="flag">2&gt;</span> /dev/null | <span class="cmd">tee</span> output.log
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Redirection cheat sheet</div>
+          <table class="ref-table">
+            <tr>
+              <th>Command</th>
+              <th>Effect</th>
+            </tr>
+            <tr>
+              <td><code>&gt; /dev/null</code></td>
+              <td>Discard stdout</td>
+            </tr>
+            <tr>
+              <td><code>2&gt; /dev/null</code></td>
+              <td>Discard stderr</td>
+            </tr>
+            <tr>
+              <td><code>&amp;&gt; /dev/null</code></td>
+              <td>Discard everything (Bash/Zsh)</td>
+            </tr>
+            <tr>
+              <td><code>2&gt;&amp;1</code></td>
+              <td>Merge stderr into stdout</td>
+            </tr>
+            <tr>
+              <td><code>&gt; /dev/null 2&gt;&amp;1</code></td>
+              <td>Discard both (old style, portable)</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Portability note</div>
+          <p>
+            <code>&amp;&gt;</code> is a Bash/Zsh shorthand. For scripts that need to run across all POSIX shells, stick with the old-style <code>&gt; /dev/null 2&gt;&amp;1</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 7: Error Handling -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">
+            <span class="yellow-color">⑦</span>
+          </div>
+          <h2>Exit Codes & Error Handling</h2>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label green-color">$? = 0</div>
+            <div class="value">
+              Success. Every command that works returns 0. This is the only
+              "happy" value.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">$? ≠ 0</div>
+            <div class="value">
+              Something went wrong. Values like 1 (general error), 126
+              (permission denied), 127 (command not found).
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">set -euo pipefail — best practice header</div>
+          <div class="code-block">
+            #!/bin/bash<br />
+            <span class="cmd">set</span> <span class="flag">-e</span>
+            <span class="comment"># exit immediately on any error</span><br />
+            <span class="cmd">set</span> <span class="flag">-u</span>
+            <span class="comment"># exit if an undefined variable is used</span
+            ><br />
+            <span class="cmd">set</span> <span class="flag">-o pipefail</span>
+            <span class="comment"># catch errors inside pipes too</span
+            ><br /><br />
+            <span class="comment"># Combined shorthand:</span><br />
+            <span class="cmd">set</span> <span class="flag">-euo pipefail</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Checking $? and bypassing set -e</div>
+          <div class="code-block">
+            <span class="comment"
+              ># Save exit code immediately before it's overwritten</span
+            ><br />
+            <span class="cmd">command1</span>;
+            <span class="var">status</span>=$?<br />
+            if [[ <span class="var">$status</span> -ne 0 ]]; then
+            <span class="cmd">echo</span> <span class="str">"failed"</span>;
+            fi<br /><br />
+            <span class="comment"># Concise alternative using ||</span><br />
+            <span class="cmd">command1</span> || <span class="cmd">echo</span>
+            <span class="str">"command1 failed"</span><br /><br />
+            <span class="comment"
+              ># Allow a command to fail without exiting (when using set
+              -e)</span
+            ><br />
+            <span class="cmd">grep</span>
+            <span class="str">"error"</span> app.log ||
+            <span class="val">true</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 8: Essential Commands -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">⑧</span>
+          </div>
+          <h2>Essential Commands</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">grep — search text</div>
+          <div class="code-block">
+            <span class="cmd">grep</span> <span class="flag">-i</span>
+            <span class="str">"error"</span> app.log
+            <span class="comment"># case-insensitive search</span><br />
+            <span class="cmd">grep</span>
+            <span class="str">"error"</span> app.log |
+            <span class="cmd">wc</span> <span class="flag">-l</span>
+            <span class="comment"># count matching lines</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            awk — extract columns from structured text
+          </div>
+          <div class="code-block">
+            <span class="comment"
+              ># $1, $2, $3... are columns (split by whitespace)</span
+            ><br />
+            <span class="cmd">ps</span> <span class="flag">-ef</span> |
+            <span class="cmd">awk</span> <span class="str">'{print $2}'</span>
+            <span class="comment"># print all PIDs</span><br />
+            <span class="cmd">awk</span> <span class="flag">-F','</span>
+            <span class="str">'{print $1}'</span> users.csv
+            <span class="comment"># comma-delimited CSV</span><br />
+            <span class="cmd">awk</span>
+            <span class="str">'$2 &gt; 25 {print $1}'</span> users.txt
+            <span class="comment"># filter + print</span><br />
+            <span class="cmd">df</span> / | <span class="cmd">awk</span>
+            <span class="str">'NR==2 {print $5}'</span>
+            <span class="comment"># line 2, column 5</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">curl — transfer data to/from URLs</div>
+          <div class="code-block">
+            <span class="cmd">curl</span> https://api.github.com/users/torvalds
+            <span class="comment"># GET request</span><br />
+            <span class="cmd">curl</span> <span class="flag">-o</span>
+            <span class="val">file.zip</span> https://example.com/file.zip
+            <span class="comment"># save to file</span><br />
+            <span class="cmd">curl</span>
+            <span class="flag">-X POST</span> https://api.example.com/users \<br />
+            &nbsp;&nbsp;&nbsp;&nbsp; <span class="flag">-H</span>
+            <span class="str">"Content-Type: application/json"</span> \<br />
+            &nbsp;&nbsp;&nbsp;&nbsp; <span class="flag">-d</span>
+            <span class="str">'{"name": "John"}'</span>
+            <span class="comment"># POST with data</span><br />
+            <span class="cmd">curl</span> <span class="flag">-s</span>
+            <span class="str">"https://wttr.in/Lisbon?format=%t"</span>
+            <span class="comment"># silent, weather API</span>
+          </div>
+          <p style="margin-top: 8px">
+            The <code>\</code> at the end of a line is a line continuation
+            character — purely for readability. There must be nothing after it,
+            not even a space.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">cat, wc, find, sort, uniq</div>
+          <div class="code-block">
+            <span class="cmd">cat</span> file.txt
+            <span class="comment"># display file contents</span><br />
+            <span class="cmd">cat</span> a.txt b.txt
+            <span class="flag">&gt;</span> combined.txt
+            <span class="comment"># combine two files</span><br />
+            <span class="cmd">wc</span> <span class="flag">-l</span> file.txt
+            <span class="comment"># count lines</span><br />
+            <span class="cmd">find</span> /var/logs
+            <span class="flag">-name</span> <span class="str">"*.log"</span>
+            <span class="flag">-mtime +30</span>
+            <span class="flag">-delete</span>
+            <span class="comment"># delete old logs</span><br />
+            <span class="cmd">cat</span> app.log | <span class="cmd">grep</span>
+            <span class="str">"error"</span> | <span class="cmd">sort</span> |
+            <span class="cmd">uniq</span>
+            <span class="comment"># unique errors</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 9: Cron Jobs -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">⑨</span>
+          </div>
+          <h2>Cron Jobs</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Schedule format</div>
+          <div class="code-block">
+            <span class="comment"># ┌ minute (0-59)</span><br />
+            <span class="comment"># │ ┌ hour (0-23)</span><br />
+            <span class="comment"># │ │ ┌ day of month (1-31)</span><br />
+            <span class="comment"># │ │ │ ┌ month (1-12)</span><br />
+            <span class="comment"># │ │ │ │ ┌ day of week (0-7)</span><br />
+            <span class="comment"># │ │ │ │ │</span><br />
+            <span class="flag">* * * * *</span>
+            <span class="cmd">/bin/bash</span> /path/to/script.sh
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Common schedules</div>
+          <table class="ref-table">
+            <tr>
+              <th>Schedule</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>* * * * *</td>
+              <td>Every minute</td>
+            </tr>
+            <tr>
+              <td>0 0 * * *</td>
+              <td>Every day at midnight</td>
+            </tr>
+            <tr>
+              <td>0 9 * * 1</td>
+              <td>Every Monday at 9am</td>
+            </tr>
+            <tr>
+              <td>0 */6 * * *</td>
+              <td>Every 6 hours</td>
+            </tr>
+          </table>
+          <p style="margin-top: 12px">
+            Always use <strong>full paths</strong> in cron jobs — cron runs in a
+            minimal environment that may not find commands by short name. Use
+            <code>/bin/bash /path/script.sh</code> not just
+            <code>script.sh</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 10: Real-World Use Cases -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">⑩</span>
+          </div>
+          <h2>Real-World Use Cases</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🗄️ Automatic backup</div>
+          <div class="code-block">
+            <span class="cmd">cp</span> <span class="flag">-r</span> ~/project
+            ~/backups/project_$(<span class="cmd">date</span>
+            <span class="flag">+%Y-%m-%d</span>)
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📊 Disk usage alert</div>
+          <div class="code-block">
+            <span class="var">USAGE</span>=$(<span class="cmd">df</span> / |
+            <span class="cmd">awk</span>
+            <span class="str">'NR==2 {print $5}'</span> |
+            <span class="cmd">tr</span> <span class="flag">-d</span>
+            <span class="str">'%'</span>)<br />
+            if [[ <span class="var">$USAGE</span> -ge 90 ]]; then<br />
+            &nbsp;&nbsp;<span class="cmd">echo</span>
+            <span class="str">"Disk almost full!"</span> |
+            <span class="cmd">mail</span> <span class="flag">-s</span>
+            <span class="str">"Alert"</span> you@email.com<br />
+            fi
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🚀 One-command deployment</div>
+          <div class="code-block">
+            <span class="cmd">git</span> <span class="flag">pull</span> origin
+            main \<br />
+            &nbsp;&nbsp;&amp;&amp; <span class="cmd">npm</span>
+            <span class="flag">install</span> \<br />
+            &nbsp;&nbsp;&amp;&amp; <span class="cmd">npm</span>
+            <span class="flag">run build</span> \<br />
+            &nbsp;&nbsp;&amp;&amp; <span class="cmd">systemctl</span>
+            <span class="flag">restart</span> myapp \<br />
+            &nbsp;&nbsp;&amp;&amp; <span class="cmd">echo</span>
+            <span class="str">"Deployed successfully!"</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔧 New machine setup</div>
+          <div class="code-block">
+            <span class="cmd">brew</span> <span class="flag">install</span> git
+            node python wget<br />
+            <span class="cmd">git</span>
+            <span class="flag">config</span> --global user.name
+            <span class="str">"Your Name"</span><br />
+            <span class="cmd">git</span>
+            <span class="flag">config</span> --global user.email
+            <span class="str">"you@email.com"</span><br />
+            <span class="cmd">echo</span>
+            <span class="str">"Machine ready!"</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 11: Reserved Keywords -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">⑪</span>
+          </div>
+          <h2>Reserved Keywords</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Shared Bash &amp; Zsh keywords</div>
+          <table class="ref-table">
+            <tr>
+              <th>Category</th>
+              <th>Keywords</th>
+            </tr>
+            <tr>
+              <td>Conditionals</td>
+              <td style="color: var(--text-muted)">if, then, else, elif, fi</td>
+            </tr>
+            <tr>
+              <td>Loops</td>
+              <td style="color: var(--text-muted)">
+                for, while, until, do, done
+              </td>
+            </tr>
+            <tr>
+              <td>Case</td>
+              <td style="color: var(--text-muted)">case, in, esac</td>
+            </tr>
+            <tr>
+              <td>Functions</td>
+              <td style="color: var(--text-muted)">function, return, exit</td>
+            </tr>
+            <tr>
+              <td>Variables</td>
+              <td style="color: var(--text-muted)">
+                export, local, readonly, unset
+              </td>
+            </tr>
+            <tr>
+              <td>I/O</td>
+              <td style="color: var(--text-muted)">echo, printf, read</td>
+            </tr>
+            <tr>
+              <td>Script control</td>
+              <td style="color: var(--text-muted)">
+                set, trap, exec, eval, source (.)
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label purple-color">Zsh-only</div>
+            <div class="value">
+              <code>setopt</code>, <code>unsetopt</code>, <code>autoload</code>,
+              <code>bindkey</code>, <code>zstyle</code>, <code>compdef</code>,
+              <code>print</code> — mostly for shell customisation, not scripting
+              logic.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">Notable difference</div>
+            <div class="value">
+              Array indexing: Bash starts at <code>0</code>, Zsh starts at
+              <code>1</code>. Associative arrays: Bash uses
+              <code>declare -A</code>, Zsh uses <code>typeset -A</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Golden rule -->
+      <div class="takeaway">
+        <h3>The Golden Rule of Shell Scripts</h3>
+        <p>
+          If you find yourself typing the same sequence of commands more than a
+          few times — that's your signal to write a script. Automation is the
+          whole point. Start with <code>set -euo pipefail</code>, use
+          <code>[[]]</code> over <code>[]</code>, always quote your variables,
+          and add a shebang so your scripts behave the same for everyone.
+        </p>
+      </div>
+
+      <!-- Parallels -->
+      <div class="card" style="margin-top: 32px">
+        <div class="card-title">🔄 Parallels you discovered</div>
+        <ul>
+          <li>
+            <strong>Python f-strings <code>f"{var}"</code></strong> ≈
+            <strong>Bash <code>"$var"</code></strong> — both substitute values
+            into strings
+          </li>
+          <li>
+            <strong>Python function calls <code>get_date()</code></strong> ≈
+            <strong>Bash <code>$(date)</code></strong> — the
+            <code>()</code> signals "execute this"
+          </li>
+          <li>
+            <strong>Windows file extensions</strong> (.exe, .bat) matter to the
+            OS — <strong>Unix extensions</strong> (.sh, .py) are just human
+            convention
+          </li>
+          <li>
+            <strong>Homebrew</strong> on macOS ≈ <strong>apt/yum</strong> on
+            Linux — package managers for installing CLI tools
+          </li>
+          <li>
+            <strong>nano</strong> shows a cheat sheet at the bottom;
+            <strong>Vi</strong> shows nothing — experience required
+          </li>
+        </ul>
       </div>
     </div>
-
-    <div class="concept-grid">
-      <div class="concept-card">
-        <div class="label zsh-color">Single quotes ''</div>
-        <div class="value">Everything is literal. No substitution happens. <code>echo '$name'</code> prints literally <code>$name</code>.</div>
-      </div>
-      <div class="concept-card">
-        <div class="label bash-color">Double quotes ""</div>
-        <div class="value">Variables and commands are substituted. <code>echo "$name"</code> prints the value of <code>name</code>.</div>
-      </div>
-    </div>
-
-    <div class="analogy-box">
-      <div class="analogy-label">Python parallel</div>
-      <p>Single quotes <code>''</code> are like Python regular strings. Double quotes <code>""</code> with <code>$</code> substitution are like Python f-strings. All variables are strings by default — even numbers.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Arithmetic</div>
-      <div class="code-block">
-        <span class="var">i</span>=42<br>
-        <span class="cmd">echo</span> <span class="str">$i + 1</span>       <span class="comment"># prints: 42 + 1  (literal!)</span><br>
-        <span class="cmd">echo</span> $((<span class="var">i</span> + 1))  <span class="comment"># prints: 43  ✓</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 4: Command Substitution -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon zsh-bg"><span class="zsh-color">④</span></div>
-      <h2>Command Substitution</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Run a command, use its output inline</div>
-      <div class="code-block">
-        <span class="comment"># Old style — backticks (legacy)</span><br>
-        <span class="cmd">echo</span> <span class="str">"Today is "</span> `<span class="cmd">date</span>`<br><br>
-        <span class="comment"># Modern style — preferred</span><br>
-        <span class="cmd">echo</span> <span class="str">"Today is $(<span class="cmd">date</span>)"</span>
-      </div>
-      <p>Both produce identical output. Use <code>$()</code> — it's cleaner, easier to read, and can be nested easily.</p>
-    </div>
-
-    <div class="analogy-box">
-      <div class="analogy-label">Python parallel</div>
-      <p><code>$variable</code> is like <code>f"{variable}"</code> — insert a value. <code>$(command)</code> is like <code>f"{get_date()}"</code> — call something and insert the result. The <code>()</code> signals "execute this".</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Special variables</div>
-      <table class="ref-table">
-        <tr><th>Variable</th><th>Meaning</th></tr>
-        <tr><td>$?</td><td>Exit code of the last command (0 = success, anything else = error)</td></tr>
-        <tr><td>$$</td><td>PID of the current process</td></tr>
-        <tr><td>$0</td><td>Name of the script</td></tr>
-        <tr><td>$1 … $9</td><td>Positional arguments passed to the script</td></tr>
-        <tr><td>$#</td><td>Number of arguments</td></tr>
-        <tr><td>$@</td><td>All arguments as separate words</td></tr>
-      </table>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 5: Operators & Conditions -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon bash-bg"><span class="bash-color">⑤</span></div>
-      <h2>Operators & Conditions</h2>
-    </div>
-
-    <div class="concept-grid">
-      <div class="concept-card">
-        <div class="label accent-color">[ ] — legacy</div>
-        <div class="value">Old style. Crashes on empty variables. Use <code>-a</code> and <code>-o</code> for AND/OR. Avoid in new scripts.</div>
-      </div>
-      <div class="concept-card">
-        <div class="label bash-color">[[ ]] — modern</div>
-        <div class="value">Preferred. Handles empty variables safely. Supports <code>&amp;&amp;</code>, <code>||</code>, <code>==</code> directly.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Numeric comparison operators</div>
-      <table class="ref-table">
-        <tr><th>Bash</th><th>Python</th><th>Meaning</th></tr>
-        <tr><td>-eq</td><td>==</td><td>equal</td></tr>
-        <tr><td>-ne</td><td>!=</td><td>not equal</td></tr>
-        <tr><td>-lt</td><td>&lt;</td><td>less than</td></tr>
-        <tr><td>-le</td><td>&lt;=</td><td>less than or equal</td></tr>
-        <tr><td>-gt</td><td>&gt;</td><td>greater than</td></tr>
-        <tr><td>-ge</td><td>&gt;=</td><td>greater than or equal</td></tr>
-      </table>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Logical operators</div>
-      <div class="code-block">
-        <span class="comment"># AND, OR, NOT inside [[ ]]</span><br>
-        if [[ <span class="var">$age</span> -ge 18 <span class="flag">&amp;&amp;</span> <span class="var">$age</span> -le 65 ]]; then <span class="cmd">echo</span> <span class="str">"working age"</span>; fi<br>
-        if [[ <span class="var">$name</span> == <span class="str">"John"</span> <span class="flag">||</span> <span class="var">$name</span> == <span class="str">"Jane"</span> ]]; then ...; fi<br><br>
-        <span class="comment"># AND, OR outside conditions — command chaining</span><br>
-        <span class="cmd">mkdir</span> my_folder <span class="flag">&amp;&amp;</span> <span class="cmd">cd</span> my_folder   <span class="comment"># cd only if mkdir succeeded</span><br>
-        <span class="cmd">cd</span> my_folder <span class="flag">||</span> <span class="cmd">echo</span> <span class="str">"folder not found"</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">if / fi structure</div>
-      <div class="code-block">
-        <span class="comment"># ; before "then" because they're on the same line</span><br>
-        if [[ <span class="var">$?</span> -ne 0 ]]; then<br>
-        &nbsp;&nbsp;<span class="cmd">echo</span> <span class="str">"Error occurred"</span><br>
-        fi   <span class="comment"># "fi" = "if" backwards — closes the block</span><br><br>
-        <span class="comment"># "then" on its own line — no ; needed</span><br>
-        if [[ <span class="var">$?</span> -ne 0 ]]<br>
-        then<br>
-        &nbsp;&nbsp;<span class="cmd">echo</span> <span class="str">"Error occurred"</span><br>
-        fi
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 6: Redirection & Pipes -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon orange-bg"><span class="orange-color">⑥</span></div>
-      <h2>Redirection & Pipes</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Data flow symbols</div>
-      <table class="ref-table">
-        <tr><th>Symbol</th><th>Meaning</th><th>Example</th></tr>
-        <tr><td>&gt;</td><td>Redirect output to file (overwrites)</td><td><code>ls &gt; files.txt</code></td></tr>
-        <tr><td>&gt;&gt;</td><td>Redirect output to file (appends)</td><td><code>echo hi &gt;&gt; log.txt</code></td></tr>
-        <tr><td>&lt;</td><td>Feed file as input to command</td><td><code>wc -l &lt; file.txt</code></td></tr>
-        <tr><td>|</td><td>Pipe: output of one command into the next</td><td><code>cat log | grep error</code></td></tr>
-      </table>
-    </div>
-
-    <div class="analogy-box">
-      <div class="analogy-label">Mental model</div>
-      <p>Think of <code>&gt;</code> and <code>&lt;</code> as arrows showing the direction of data flow. The pipe <code>|</code> chains small, focused tools together — the Unix philosophy of doing one thing well.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Real example — error report script</div>
-      <div class="code-block">
-        <span class="comment"># Find all errors, save to file</span><br>
-        <span class="cmd">grep</span> <span class="flag">-i</span> <span class="str">"error"</span> /var/log/app.log <span class="flag">&gt;</span> error_report.txt<br><br>
-        <span class="comment"># Count how many were found</span><br>
-        <span class="cmd">echo</span> <span class="str">"Found $(<span class="cmd">wc</span> <span class="flag">-l</span> &lt; error_report.txt) errors"</span><br><br>
-        <span class="comment"># Same thing in one line using pipe</span><br>
-        <span class="cmd">grep</span> <span class="flag">-i</span> <span class="str">"error"</span> app.log | <span class="cmd">wc</span> <span class="flag">-l</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 7: Error Handling -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon yellow-bg"><span class="yellow-color">⑦</span></div>
-      <h2>Exit Codes & Error Handling</h2>
-    </div>
-
-    <div class="concept-grid">
-      <div class="concept-card">
-        <div class="label bash-color">$? = 0</div>
-        <div class="value">Success. Every command that works returns 0. This is the only "happy" value.</div>
-      </div>
-      <div class="concept-card">
-        <div class="label orange-color">$? ≠ 0</div>
-        <div class="value">Something went wrong. Values like 1 (general error), 126 (permission denied), 127 (command not found).</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">set -euo pipefail — best practice header</div>
-      <div class="code-block">
-        #!/bin/bash<br>
-        <span class="cmd">set</span> <span class="flag">-e</span>           <span class="comment"># exit immediately on any error</span><br>
-        <span class="cmd">set</span> <span class="flag">-u</span>           <span class="comment"># exit if an undefined variable is used</span><br>
-        <span class="cmd">set</span> <span class="flag">-o pipefail</span>  <span class="comment"># catch errors inside pipes too</span><br><br>
-        <span class="comment"># Combined shorthand:</span><br>
-        <span class="cmd">set</span> <span class="flag">-euo pipefail</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Checking $? and bypassing set -e</div>
-      <div class="code-block">
-        <span class="comment"># Save exit code immediately before it's overwritten</span><br>
-        <span class="cmd">command1</span>; <span class="var">status</span>=$?<br>
-        if [[ <span class="var">$status</span> -ne 0 ]]; then <span class="cmd">echo</span> <span class="str">"failed"</span>; fi<br><br>
-        <span class="comment"># Concise alternative using ||</span><br>
-        <span class="cmd">command1</span> || <span class="cmd">echo</span> <span class="str">"command1 failed"</span><br><br>
-        <span class="comment"># Allow a command to fail without exiting (when using set -e)</span><br>
-        <span class="cmd">grep</span> <span class="str">"error"</span> app.log || <span class="val">true</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 8: Essential Commands -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon accent-bg"><span class="accent-color">⑧</span></div>
-      <h2>Essential Commands</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">grep — search text</div>
-      <div class="code-block">
-        <span class="cmd">grep</span> <span class="flag">-i</span> <span class="str">"error"</span> app.log        <span class="comment"># case-insensitive search</span><br>
-        <span class="cmd">grep</span> <span class="str">"error"</span> app.log | <span class="cmd">wc</span> <span class="flag">-l</span>  <span class="comment"># count matching lines</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">awk — extract columns from structured text</div>
-      <div class="code-block">
-        <span class="comment"># $1, $2, $3... are columns (split by whitespace)</span><br>
-        <span class="cmd">ps</span> <span class="flag">-ef</span> | <span class="cmd">awk</span> <span class="str">'{print $2}'</span>          <span class="comment"># print all PIDs</span><br>
-        <span class="cmd">awk</span> <span class="flag">-F','</span> <span class="str">'{print $1}'</span> users.csv  <span class="comment"># comma-delimited CSV</span><br>
-        <span class="cmd">awk</span> <span class="str">'$2 &gt; 25 {print $1}'</span> users.txt  <span class="comment"># filter + print</span><br>
-        <span class="cmd">df</span> / | <span class="cmd">awk</span> <span class="str">'NR==2 {print $5}'</span>      <span class="comment"># line 2, column 5</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">curl — transfer data to/from URLs</div>
-      <div class="code-block">
-        <span class="cmd">curl</span> https://api.github.com/users/torvalds        <span class="comment"># GET request</span><br>
-        <span class="cmd">curl</span> <span class="flag">-o</span> <span class="val">file.zip</span> https://example.com/file.zip  <span class="comment"># save to file</span><br>
-        <span class="cmd">curl</span> <span class="flag">-X POST</span> https://api.example.com/users \<br>
-        &nbsp;&nbsp;&nbsp;&nbsp; <span class="flag">-H</span> <span class="str">"Content-Type: application/json"</span> \<br>
-        &nbsp;&nbsp;&nbsp;&nbsp; <span class="flag">-d</span> <span class="str">'{"name": "John"}'</span>             <span class="comment"># POST with data</span><br>
-        <span class="cmd">curl</span> <span class="flag">-s</span> <span class="str">"https://wttr.in/Lisbon?format=%t"</span>   <span class="comment"># silent, weather API</span>
-      </div>
-      <p style="margin-top:8px;">The <code>\</code> at the end of a line is a line continuation character — purely for readability. There must be nothing after it, not even a space.</p>
-    </div>
-
-    <div class="card">
-      <div class="card-title">cat, wc, find, sort, uniq</div>
-      <div class="code-block">
-        <span class="cmd">cat</span> file.txt                    <span class="comment"># display file contents</span><br>
-        <span class="cmd">cat</span> a.txt b.txt <span class="flag">&gt;</span> combined.txt  <span class="comment"># combine two files</span><br>
-        <span class="cmd">wc</span> <span class="flag">-l</span> file.txt                 <span class="comment"># count lines</span><br>
-        <span class="cmd">find</span> /var/logs <span class="flag">-name</span> <span class="str">"*.log"</span> <span class="flag">-mtime +30</span> <span class="flag">-delete</span>  <span class="comment"># delete old logs</span><br>
-        <span class="cmd">cat</span> app.log | <span class="cmd">grep</span> <span class="str">"error"</span> | <span class="cmd">sort</span> | <span class="cmd">uniq</span>  <span class="comment"># unique errors</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 9: Cron Jobs -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon bash-bg"><span class="bash-color">⑨</span></div>
-      <h2>Cron Jobs</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Schedule format</div>
-      <div class="code-block">
-        <span class="comment"># ┌ minute (0-59)</span><br>
-        <span class="comment"># │ ┌ hour (0-23)</span><br>
-        <span class="comment"># │ │ ┌ day of month (1-31)</span><br>
-        <span class="comment"># │ │ │ ┌ month (1-12)</span><br>
-        <span class="comment"># │ │ │ │ ┌ day of week (0-7)</span><br>
-        <span class="comment"># │ │ │ │ │</span><br>
-        <span class="flag">* * * * *</span>  <span class="cmd">/bin/bash</span> /path/to/script.sh
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Common schedules</div>
-      <table class="ref-table">
-        <tr><th>Schedule</th><th>Meaning</th></tr>
-        <tr><td>* * * * *</td><td>Every minute</td></tr>
-        <tr><td>0 0 * * *</td><td>Every day at midnight</td></tr>
-        <tr><td>0 9 * * 1</td><td>Every Monday at 9am</td></tr>
-        <tr><td>0 */6 * * *</td><td>Every 6 hours</td></tr>
-      </table>
-      <p style="margin-top:12px;">Always use <strong>full paths</strong> in cron jobs — cron runs in a minimal environment that may not find commands by short name. Use <code>/bin/bash /path/script.sh</code> not just <code>script.sh</code>.</p>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 10: Real-World Use Cases -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon orange-bg"><span class="orange-color">⑩</span></div>
-      <h2>Real-World Use Cases</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🗄️ Automatic backup</div>
-      <div class="code-block">
-        <span class="cmd">cp</span> <span class="flag">-r</span> ~/project ~/backups/project_$(<span class="cmd">date</span> <span class="flag">+%Y-%m-%d</span>)
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">📊 Disk usage alert</div>
-      <div class="code-block">
-        <span class="var">USAGE</span>=$(<span class="cmd">df</span> / | <span class="cmd">awk</span> <span class="str">'NR==2 {print $5}'</span> | <span class="cmd">tr</span> <span class="flag">-d</span> <span class="str">'%'</span>)<br>
-        if [[ <span class="var">$USAGE</span> -ge 90 ]]; then<br>
-        &nbsp;&nbsp;<span class="cmd">echo</span> <span class="str">"Disk almost full!"</span> | <span class="cmd">mail</span> <span class="flag">-s</span> <span class="str">"Alert"</span> you@email.com<br>
-        fi
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🚀 One-command deployment</div>
-      <div class="code-block">
-        <span class="cmd">git</span> <span class="flag">pull</span> origin main \<br>
-        &nbsp;&nbsp;&amp;&amp; <span class="cmd">npm</span> <span class="flag">install</span> \<br>
-        &nbsp;&nbsp;&amp;&amp; <span class="cmd">npm</span> <span class="flag">run build</span> \<br>
-        &nbsp;&nbsp;&amp;&amp; <span class="cmd">systemctl</span> <span class="flag">restart</span> myapp \<br>
-        &nbsp;&nbsp;&amp;&amp; <span class="cmd">echo</span> <span class="str">"Deployed successfully!"</span>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">🔧 New machine setup</div>
-      <div class="code-block">
-        <span class="cmd">brew</span> <span class="flag">install</span> git node python wget<br>
-        <span class="cmd">git</span> <span class="flag">config</span> --global user.name <span class="str">"Your Name"</span><br>
-        <span class="cmd">git</span> <span class="flag">config</span> --global user.email <span class="str">"you@email.com"</span><br>
-        <span class="cmd">echo</span> <span class="str">"Machine ready!"</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <!-- Section 11: Reserved Keywords -->
-  <div class="section">
-    <div class="section-header">
-      <div class="section-icon zsh-bg"><span class="zsh-color">⑪</span></div>
-      <h2>Reserved Keywords</h2>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Shared Bash &amp; Zsh keywords</div>
-      <table class="ref-table">
-        <tr><th>Category</th><th>Keywords</th></tr>
-        <tr><td>Conditionals</td><td style="color:var(--text-muted);">if, then, else, elif, fi</td></tr>
-        <tr><td>Loops</td><td style="color:var(--text-muted);">for, while, until, do, done</td></tr>
-        <tr><td>Case</td><td style="color:var(--text-muted);">case, in, esac</td></tr>
-        <tr><td>Functions</td><td style="color:var(--text-muted);">function, return, exit</td></tr>
-        <tr><td>Variables</td><td style="color:var(--text-muted);">export, local, readonly, unset</td></tr>
-        <tr><td>I/O</td><td style="color:var(--text-muted);">echo, printf, read</td></tr>
-        <tr><td>Script control</td><td style="color:var(--text-muted);">set, trap, exec, eval, source (.)</td></tr>
-      </table>
-    </div>
-
-    <div class="concept-grid">
-      <div class="concept-card">
-        <div class="label zsh-color">Zsh-only</div>
-        <div class="value"><code>setopt</code>, <code>unsetopt</code>, <code>autoload</code>, <code>bindkey</code>, <code>zstyle</code>, <code>compdef</code>, <code>print</code> — mostly for shell customisation, not scripting logic.</div>
-      </div>
-      <div class="concept-card">
-        <div class="label orange-color">Notable difference</div>
-        <div class="value">Array indexing: Bash starts at <code>0</code>, Zsh starts at <code>1</code>. Associative arrays: Bash uses <code>declare -A</code>, Zsh uses <code>typeset -A</code>.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Golden rule -->
-  <div class="takeaway">
-    <h3>The Golden Rule of Shell Scripts</h3>
-    <p>If you find yourself typing the same sequence of commands more than a few times — that's your signal to write a script. Automation is the whole point. Start with <code>set -euo pipefail</code>, use <code>[[]]</code> over <code>[]</code>, always quote your variables, and add a shebang so your scripts behave the same for everyone.</p>
-  </div>
-
-  <!-- Parallels -->
-  <div class="card" style="margin-top: 32px;">
-    <div class="card-title">🔄 Parallels you discovered</div>
-    <ul>
-      <li><strong>Python f-strings <code>f"{var}"</code></strong> ≈ <strong>Bash <code>"$var"</code></strong> — both substitute values into strings</li>
-      <li><strong>Python function calls <code>get_date()</code></strong> ≈ <strong>Bash <code>$(date)</code></strong> — the <code>()</code> signals "execute this"</li>
-      <li><strong>Windows file extensions</strong> (.exe, .bat) matter to the OS — <strong>Unix extensions</strong> (.sh, .py) are just human convention</li>
-      <li><strong>Homebrew</strong> on macOS ≈ <strong>apt/yum</strong> on Linux — package managers for installing CLI tools</li>
-      <li><strong>nano</strong> shows a cheat sheet at the bottom; <strong>Vi</strong> shows nothing — experience required</li>
-    </ul>
-  </div>
-
-</div>
-</body>
+  </body>
 </html>

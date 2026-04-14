@@ -5,366 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Elasticsearch & Kibana - Learning Summary</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  :root {
-    --bg: #0f1117;
-    --surface: #181b24;
-    --surface-raised: #1e222d;
-    --border: #2a2f3c;
-    --text: #e4e6ed;
-    --text-muted: #8b90a0;
-    --accent: #00bcd4;
-    --accent-soft: rgba(0, 188, 212, 0.12);
-    --elastic-yellow: #fec514;
-    --elastic-yellow-soft: rgba(254, 197, 20, 0.1);
-    --kibana-pink: #f04e98;
-    --kibana-pink-soft: rgba(240, 78, 152, 0.1);
-    --green: #00c9a7;
-    --green-soft: rgba(0, 201, 167, 0.1);
-    --orange: #ff8a50;
-    --orange-soft: rgba(255, 138, 80, 0.1);
-  }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    padding: 40px 20px;
-  }
-
-  .container {
-    max-width: 820px;
-    margin: 0 auto;
-  }
-
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 56px;
-    padding: 48px 32px;
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
   .header::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
     background: radial-gradient(circle at 30% 50%, rgba(0, 188, 212, 0.06) 0%, transparent 50%),
                 radial-gradient(circle at 70% 50%, rgba(254, 197, 20, 0.04) 0%, transparent 50%);
-    pointer-events: none;
   }
-
-  .header-badge {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-soft);
-    padding: 6px 16px;
-    border-radius: 100px;
-    margin-bottom: 20px;
-    position: relative;
-  }
-
-  .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 38px;
-    font-weight: 400;
-    line-height: 1.2;
-    margin-bottom: 12px;
-    position: relative;
-  }
-
-  .header h1 span.es { color: var(--elastic-yellow); }
-  .header h1 span.kb { color: var(--kibana-pink); }
-
-  .header p {
-    color: var(--text-muted);
-    font-size: 15px;
-    position: relative;
-  }
-
-  /* Section */
-  .section {
-    margin-bottom: 40px;
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .section-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .section-header h2 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px;
-    font-weight: 400;
-  }
-
-  /* Cards */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px 24px;
-    margin-bottom: 12px;
-    transition: border-color 0.2s;
-  }
-
-  .card:hover {
-    border-color: #3a3f50;
-  }
-
-  .card-title {
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .card p, .card li {
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1.7;
-  }
-
-  .card ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .card ul li {
-    padding: 4px 0 4px 20px;
-    position: relative;
-  }
-
-  .card ul li::before {
-    content: '→';
-    position: absolute;
-    left: 0;
-    color: var(--accent);
-    font-size: 13px;
-  }
-
-  /* Concept grid */
-  .concept-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  @media (max-width: 600px) {
-    .concept-grid { grid-template-columns: 1fr; }
-    .header h1 { font-size: 28px; }
-    .analogy-flow { flex-direction: column; }
-    .analogy-flow .arrow { transform: rotate(90deg); }
-  }
-
-  .concept-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px 20px;
-  }
-
-  .concept-card .label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .concept-card .value {
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  .es-color { color: var(--elastic-yellow); }
-  .kb-color { color: var(--kibana-pink); }
-  .green-color { color: var(--green); }
-  .orange-color { color: var(--orange); }
-  .accent-color { color: var(--accent); }
-
-  .es-bg { background: var(--elastic-yellow-soft); }
-  .kb-bg { background: var(--kibana-pink-soft); }
-  .green-bg { background: var(--green-soft); }
-  .orange-bg { background: var(--orange-soft); }
-  .accent-bg { background: var(--accent-soft); }
-
-  /* Code blocks */
-  .code-block {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 20px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.8;
-    overflow-x: auto;
-    margin: 12px 0;
-    color: var(--text-muted);
-  }
-
-  .code-block .cmd { color: var(--accent); }
-  .code-block .flag { color: var(--elastic-yellow); }
-  .code-block .url { color: var(--green); }
-  .code-block .json { color: var(--kibana-pink); }
-  .code-block .comment { color: #555a6e; font-style: italic; }
-
-  /* Analogy box */
-  .analogy-box {
-    background: var(--surface-raised);
-    border-left: 3px solid var(--accent);
-    border-radius: 0 12px 12px 0;
-    padding: 18px 22px;
-    margin: 16px 0;
-  }
-
-  .analogy-box .analogy-label {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .analogy-box p {
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  /* Flow diagrams */
-  .analogy-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px 0;
-    flex-wrap: wrap;
-  }
-
-  .flow-box {
-    padding: 10px 18px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    border: 1px solid var(--border);
-    background: var(--surface);
-  }
-
-  .arrow {
-    color: var(--text-muted);
-    font-size: 18px;
-  }
-
-  /* Waterfall */
-  .waterfall {
-    padding: 12px 0;
-  }
-
-  .waterfall-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 6px;
-    font-size: 13px;
-  }
-
-  .waterfall-label {
-    width: 160px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-    text-align: right;
-    padding-right: 14px;
-  }
-
-  .waterfall-bar {
-    height: 22px;
-    border-radius: 4px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 8px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: rgba(255,255,255,0.7);
-  }
-
-  /* Tag */
-  .tag {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 6px;
-    margin-right: 4px;
-    margin-bottom: 4px;
-  }
-
-  /* Divider */
-  .divider {
-    height: 1px;
-    background: var(--border);
-    margin: 40px 0;
-  }
-
-  /* Key takeaway */
+  .header h1 span.es { color: var(--yellow); }
+  .header h1 span.kb { color: var(--pink); }
   .takeaway {
     background: linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(254, 197, 20, 0.06) 100%);
     border: 1px solid rgba(0, 188, 212, 0.2);
-    border-radius: 16px;
-    padding: 28px 28px;
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .takeaway h3 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 12px;
-  }
-
-  .takeaway p {
-    color: var(--text-muted);
-    font-size: 14px;
-    max-width: 600px;
-    margin: 0 auto;
   }
 </style>
 </head>
@@ -381,17 +32,17 @@
   <!-- Section 1: What Are They -->
   <div class="section">
     <div class="section-header">
-      <div class="section-icon es-bg"><span class="es-color">①</span></div>
+      <div class="section-icon yellow-bg"><span class="yellow-color">①</span></div>
       <h2>What Are They?</h2>
     </div>
-    
+
     <div class="concept-grid">
       <div class="concept-card">
-        <div class="label es-color">Elasticsearch</div>
+        <div class="label yellow-color">Elasticsearch</div>
         <div class="value">A search and analytics engine. Stores JSON documents and makes them searchable in milliseconds. Not a traditional database — it's optimised for finding and analysing data fast.</div>
       </div>
       <div class="concept-card">
-        <div class="label kb-color">Kibana</div>
+        <div class="label pink-color">Kibana</div>
         <div class="value">The visual interface for Elasticsearch. Build dashboards, explore data, run queries — all without writing code. Like Prisma Studio is to PostgreSQL.</div>
       </div>
     </div>
@@ -402,11 +53,11 @@
     </div>
 
     <div class="analogy-flow">
-      <div class="flow-box" style="border-color: var(--elastic-yellow);">PostgreSQL<br><span style="font-size:11px;color:var(--text-muted);">Source of truth</span></div>
+      <div class="flow-box" style="border-color: var(--yellow);">PostgreSQL<br><span style="font-size:11px;color:var(--text-muted);">Source of truth</span></div>
       <div class="arrow">→</div>
       <div class="flow-box" style="border-color: var(--accent);">Elasticsearch<br><span style="font-size:11px;color:var(--text-muted);">Search copy</span></div>
       <div class="arrow">→</div>
-      <div class="flow-box" style="border-color: var(--kibana-pink);">Kibana<br><span style="font-size:11px;color:var(--text-muted);">Visual layer</span></div>
+      <div class="flow-box" style="border-color: var(--pink);">Kibana<br><span style="font-size:11px;color:var(--text-muted);">Visual layer</span></div>
     </div>
   </div>
 
@@ -450,7 +101,7 @@
 
     <div class="card">
       <div class="card-title">What you did</div>
-      <p>Created a <code style="color:var(--accent);">docker-compose.yml</code> that runs Elasticsearch (port 9200) and Kibana (port 5601) in containers. Docker keeps your system clean — nothing is "installed," just run and stop.</p>
+      <p>Created a <code>docker-compose.yml</code> that runs Elasticsearch (port 9200) and Kibana (port 5601) in containers. Docker keeps your system clean — nothing is "installed," just run and stop.</p>
     </div>
 
     <div class="code-block">
@@ -514,17 +165,17 @@
   <!-- Section 5: Query DSL -->
   <div class="section">
     <div class="section-header">
-      <div class="section-icon es-bg"><span class="es-color">⑤</span></div>
+      <div class="section-icon yellow-bg"><span class="yellow-color">⑤</span></div>
       <h2>Query DSL vs KQL</h2>
     </div>
 
     <div class="concept-grid">
       <div class="concept-card">
-        <div class="label es-color">Query DSL</div>
+        <div class="label yellow-color">Query DSL</div>
         <div class="value">JSON-based, used by developers in code and API calls. Powerful, verbose, handles complex queries.</div>
       </div>
       <div class="concept-card">
-        <div class="label kb-color">KQL</div>
+        <div class="label pink-color">KQL</div>
         <div class="value">Simple text syntax for Kibana's search bar. Gets translated to Query DSL behind the scenes.</div>
       </div>
     </div>
@@ -543,7 +194,7 @@
 
     <div class="card">
       <div class="card-title">Relevance scoring</div>
-      <p><strong>_score</strong> ranks how well each document matches your query. Use <code style="color:var(--accent);">must</code> when relevance matters (text search). Use <code style="color:var(--accent);">filter</code> for exact yes/no conditions (city, status, age) — it's faster because it skips scoring.</p>
+      <p><strong>_score</strong> ranks how well each document matches your query. Use <code>must</code> when relevance matters (text search). Use <code>filter</code> for exact yes/no conditions (city, status, age) — it's faster because it skips scoring.</p>
     </div>
   </div>
 
@@ -552,7 +203,7 @@
   <!-- Section 6: Kibana -->
   <div class="section">
     <div class="section-header">
-      <div class="section-icon kb-bg"><span class="kb-color">⑥</span></div>
+      <div class="section-icon pink-bg"><span class="pink-color">⑥</span></div>
       <h2>Kibana Navigation</h2>
     </div>
 
@@ -597,11 +248,11 @@
     </div>
 
     <div class="card">
-      <p>You created a separate <code style="color:var(--accent);">deployments</code> index with timestamp, service, and version fields. Then added an annotation layer to a chart that pulls from this index, showing vertical lines on the timeline wherever a deployment happened.</p>
+      <p>You created a separate <code>deployments</code> index with timestamp, service, and version fields. Then added an annotation layer to a chart that pulls from this index, showing vertical lines on the timeline wherever a deployment happened.</p>
       <div style="margin-top:12px;">
-        <span class="tag es-bg es-color">1. Create deployments index</span>
+        <span class="tag yellow-bg yellow-color">1. Create deployments index</span>
         <span class="tag accent-bg accent-color">2. Create data view in Kibana</span>
-        <span class="tag kb-bg kb-color">3. Add annotation layer to chart</span>
+        <span class="tag pink-bg pink-color">3. Add annotation layer to chart</span>
         <span class="tag green-bg green-color">4. Set to Custom Query</span>
       </div>
     </div>
@@ -617,8 +268,8 @@
     </div>
 
     <div class="analogy-flow" style="flex-direction: column; gap: 8px;">
-      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--elastic-yellow);text-align:left;">
-        <span class="es-color" style="font-weight:700;">1. Dashboard</span><br>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--yellow);text-align:left;">
+        <span class="yellow-color" style="font-weight:700;">1. Dashboard</span><br>
         <span style="font-size:12px;color:var(--text-muted);">Spot the anomaly — when did it start? Spike in errors? Drop in traffic?</span>
       </div>
       <div class="arrow" style="transform:rotate(90deg);">→</div>
@@ -627,8 +278,8 @@
         <span style="font-size:12px;color:var(--text-muted);">Narrow down — which service? Which endpoint? Which server?</span>
       </div>
       <div class="arrow" style="transform:rotate(90deg);">→</div>
-      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--kibana-pink);text-align:left;">
-        <span class="kb-color" style="font-weight:700;">3. Discover</span><br>
+      <div class="flow-box" style="width:100%;max-width:500px;border-color:var(--pink);text-align:left;">
+        <span class="pink-color" style="font-weight:700;">3. Discover</span><br>
         <span style="font-size:12px;color:var(--text-muted);">Dig into individual documents — error messages, exact timestamps, raw details</span>
       </div>
       <div class="arrow" style="transform:rotate(90deg);">→</div>
@@ -649,7 +300,7 @@
   <!-- Section 9: APM Waterfall -->
   <div class="section">
     <div class="section-header">
-      <div class="section-icon kb-bg"><span class="kb-color">⑨</span></div>
+      <div class="section-icon pink-bg"><span class="pink-color">⑨</span></div>
       <h2>Distributed Tracing (APM)</h2>
     </div>
 
@@ -675,11 +326,11 @@
         </div>
         <div class="waterfall-row">
           <div class="waterfall-label">&nbsp;&nbsp;API Gateway</div>
-          <div class="waterfall-bar" style="width:67%;background:var(--elastic-yellow);">400ms</div>
+          <div class="waterfall-bar" style="width:67%;background:var(--yellow);">400ms</div>
         </div>
         <div class="waterfall-row">
           <div class="waterfall-label">&nbsp;&nbsp;&nbsp;&nbsp;Payment Svc</div>
-          <div class="waterfall-bar" style="width:50%;background:var(--kibana-pink);">300ms</div>
+          <div class="waterfall-bar" style="width:50%;background:var(--pink);">300ms</div>
         </div>
         <div class="waterfall-row">
           <div class="waterfall-label">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DB: SELECT</div>
