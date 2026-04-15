@@ -274,6 +274,121 @@
             <span class="comment"># prints: 43 ✓</span>
           </div>
         </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">No real types</div>
+          <p>
+            Bash has no <code>int</code>, <code>bool</code>, <code>float</code>,
+            or <code>list</code>. Everything is fundamentally a string. Use
+            <code>declare</code> to give a variable an <em>attribute</em> so
+            Bash treats it specially.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Plain string (default)</div>
+          <div class="code-block">
+            <span class="var">name</span>=<span class="str">"Vera"</span><br />
+            <span class="var">number</span>=42
+            <span class="comment"># still stored as string "42"!</span>
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label green-color">declare -i &nbsp;· integer</div>
+            <div class="value">
+              <div class="code-block">
+                <span class="cmd">declare</span> <span class="flag">-i</span>
+                <span class="var">count</span>=5<br />
+                <span class="var">count</span>=count+1
+                <span class="comment"># auto math → 6</span><br />
+                <span class="var">count</span>=<span class="str">"hello"</span>
+                <span class="comment"># assigns 0</span>
+              </div>
+              Without <code>-i</code> you'd need <code>$(( ))</code> for math.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label pink-color">declare -r &nbsp;· readonly</div>
+            <div class="value">
+              <div class="code-block">
+                <span class="cmd">declare</span> <span class="flag">-r</span>
+                <span class="var">PI</span>=3.14<br />
+                <span class="var">PI</span>=5
+                <span class="comment"># error! cannot reassign</span>
+              </div>
+              A constant — same as <code>const</code> in other languages.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label purple-color">declare -a &nbsp;· array</div>
+            <div class="value">
+              <div class="code-block">
+                <span class="cmd">declare</span> <span class="flag">-a</span>
+                <span class="var">fruits</span>=(<span class="str">"apple"</span>
+                <span class="str">"banana"</span>
+                <span class="str">"cherry"</span>)<br />
+                <span class="cmd">echo</span> ${<span class="var">fruits</span>[0]}
+                <span class="comment"># apple (0-indexed)</span><br />
+                <span class="cmd">echo</span> ${<span class="var">fruits</span>[@]}
+                <span class="comment"># all elements</span><br />
+                <span class="cmd">echo</span> ${#<span class="var">fruits</span>[@]}
+                <span class="comment"># count</span>
+              </div>
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">declare -A &nbsp;· associative array</div>
+            <div class="value">
+              <div class="code-block">
+                <span class="cmd">declare</span> <span class="flag">-A</span>
+                <span class="var">person</span><br />
+                <span class="var">person</span>[name]=<span class="str">"Vera"</span><br />
+                <span class="var">person</span>[city]=<span class="str">"Lisbon"</span><br />
+                <span class="cmd">echo</span> ${<span class="var">person</span>[name]}
+                <span class="comment"># Vera</span>
+              </div>
+              Closest Bash gets to a Python <code>dict</code>.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label yellow-color">declare -x &nbsp;· export</div>
+            <div class="value">
+              <div class="code-block">
+                <span class="cmd">declare</span> <span class="flag">-x</span>
+                <span class="var">MY_VAR</span>=<span class="str">"hello"</span><br />
+                <span class="comment"># same as:</span><br />
+                <span class="cmd">export</span>
+                <span class="var">MY_VAR</span>=<span class="str">"hello"</span>
+              </div>
+              Makes the variable available to child processes.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Python → Bash cheat sheet</div>
+          <table class="ref-table">
+            <tr><th>Python</th><th>Bash equivalent</th></tr>
+            <tr><td>x = "hello"</td><td>x="hello"</td></tr>
+            <tr><td>x = 42</td><td>declare -i x=42</td></tr>
+            <tr><td>x = True / False</td><td>x=true / x=false <em>(just strings!)</em></td></tr>
+            <tr><td>x = [1, 2, 3]</td><td>declare -a x=(1 2 3)</td></tr>
+            <tr><td>x = {"a": 1}</td><td>declare -A x=([a]=1)</td></tr>
+            <tr><td>const x = 5</td><td>declare -r x=5</td></tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Key takeaways</div>
+          <ul>
+            <li>Without <code>declare</code>, everything is a string.</li>
+            <li>Bash has <strong>no float type</strong> — use <code>awk</code> or <code>bc</code> for decimals.</li>
+            <li>Booleans don't exist — use strings <code>"true"</code>/<code>"false"</code> or <code>0</code>/<code>1</code>.</li>
+            <li><code>declare</code> attributes are optional — most scripts just use plain variables and <code>$(( ))</code> for math.</li>
+          </ul>
+        </div>
       </div>
 
       <div class="divider"></div>
@@ -420,6 +535,39 @@
               <td>greater than or equal</td>
             </tr>
           </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">String tests</div>
+          <table class="ref-table">
+            <tr>
+              <th>Operator</th>
+              <th>Meaning</th>
+            </tr>
+            <tr>
+              <td>-z</td>
+              <td>True if string is <strong>empty</strong> (zero length)</td>
+            </tr>
+            <tr>
+              <td>-n</td>
+              <td>True if string is <strong>non-empty</strong></td>
+            </tr>
+            <tr>
+              <td>==</td>
+              <td>Strings are equal</td>
+            </tr>
+            <tr>
+              <td>!=</td>
+              <td>Strings are not equal</td>
+            </tr>
+          </table>
+          <div class="code-block" style="margin-top: 12px;">
+            <span class="comment"># Check if a variable is empty</span><br />
+            if [[ <span class="flag">-z</span>
+            <span class="str">"$remote_head"</span> ]]; then<br />
+            &nbsp;&nbsp;<span class="var">remote_is_empty</span>=true<br />
+            fi
+          </div>
         </div>
 
         <div class="card">
@@ -805,6 +953,66 @@
             <span class="cmd">uniq</span>
             <span class="comment"># unique errors</span>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">less — pager for long output</div>
+          <p>
+            <code>less</code> is a built-in Unix pager — pre-installed on macOS
+            and Linux. It displays text one screenful at a time so long output
+            doesn't fly past you. The name is a joke: it's an improved
+            <code>more</code>, so <em>"less is more"</em>.
+          </p>
+          <div class="code-block">
+            <span class="cmd">less</span> file.txt
+            <span class="comment"># read a file</span><br />
+            <span class="cmd">cat</span> file.txt |
+            <span class="cmd">less</span>
+            <span class="comment"># pipe any output into less</span><br />
+            <span class="cmd">man</span> git | <span class="cmd">less</span>
+            <span class="comment"># man uses less by default!</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">less — navigation keys</div>
+          <table class="ref-table">
+            <tr><th>Key</th><th>Action</th></tr>
+            <tr><td>Space &nbsp;/&nbsp; f</td><td>Next page</td></tr>
+            <tr><td>b</td><td>Previous page</td></tr>
+            <tr><td>j &nbsp;/&nbsp; ↓</td><td>One line down</td></tr>
+            <tr><td>k &nbsp;/&nbsp; ↑</td><td>One line up</td></tr>
+            <tr><td>g</td><td>Go to top</td></tr>
+            <tr><td>G</td><td>Go to bottom</td></tr>
+            <tr><td>/word</td><td>Search for <em>word</em></td></tr>
+            <tr><td>n</td><td>Next search result</td></tr>
+            <tr><td>q</td><td>Quit</td></tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">How Git uses it</div>
+          <p>
+            Git automatically pipes long output through <code>less</code> so you
+            can read it comfortably — that's why <code>git log</code>,
+            <code>git diff</code>, and <code>git ls-remote</code> drop you into
+            a scrollable view when the output is large.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">less vs cat vs more</div>
+          <table class="ref-table">
+            <tr><th>Command</th><th>Behavior</th></tr>
+            <tr><td>cat</td><td>Dumps everything at once, no navigation</td></tr>
+            <tr><td>more</td><td>Old pager — forward only, can't go back</td></tr>
+            <tr><td>less</td><td>Modern pager — full navigation and search</td></tr>
+          </table>
+          <p style="margin-top: 8px">
+            <code>less</code> is strictly better than <code>more</code> for
+            reading — but in scripts you want <code>cat</code> behavior so
+            output flows through without interruption.
+          </p>
         </div>
       </div>
 
