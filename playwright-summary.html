@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playwright - Learning Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .header::before {
+        background:
+          radial-gradient(circle at 30% 50%, rgba(0, 188, 212, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 70% 50%, rgba(255, 138, 80, 0.04) 0%, transparent 50%);
+      }
+      .header h1 span.pw { color: var(--accent); }
+      .header h1 span.e2e { color: var(--orange); }
+      .takeaway {
+        background: linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(255, 138, 80, 0.06) 100%);
+        border: 1px solid rgba(0, 188, 212, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-badge">Learning Session Summary</div>
+        <h1><span class="pw">Playwright</span> & <span class="e2e">E2E Testing</span></h1>
+        <p>
+          End-to-end testing fundamentals — test structure, page interaction, assertions, auto-waiting, and fixtures
+        </p>
+      </div>
+
+      <!-- Section 1: What is E2E Testing? -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">①</span>
+          </div>
+          <h2>What is E2E Testing?</h2>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label accent-color">Unit Tests</div>
+            <div class="value">
+              Verify a single function or component in isolation. Everything around it is mocked. Fast, focused, and plentiful.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">E2E Tests</div>
+            <div class="value">
+              Simulate a real user interacting with your full, running application — browser, server, database, everything together.
+            </div>
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Key analogy</div>
+          <p>
+            Unit tests cover individual bricks. Integration tests check that bricks fit together. E2E tests verify that the whole building stands and the doors open.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">How E2E differs from unit testing</div>
+          <ul>
+            <li><strong>You test user flows</strong> — "can a user sign up, log in, and place an order?" instead of "does this function return the right value?"</li>
+            <li><strong>You need a running app</strong> — server, database, and services must all be up</li>
+            <li><strong>They're slower</strong> — seconds per test instead of milliseconds, because real pages render and real network requests fire</li>
+            <li><strong>Async is everywhere</strong> — page loads, API calls, elements appearing after JS runs</li>
+            <li><strong>Selectors target the real DOM</strong> — you query actual rendered pages, not shallow-rendered components</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 2: Test Structure -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">②</span>
+          </div>
+          <h2>Test Structure</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><code>test.describe()</code> — grouping tests</div>
+          <p>
+            Groups related tests under a label, like a test suite. The label appears as a section header in the test report.
+          </p>
+          <div class="code-block">
+            <span class="cmd">test</span>.<span class="val">describe</span>(<span class="str">'Login'</span>, () => {<br>
+            &nbsp;&nbsp;<span class="comment">// all login-related tests go here</span><br>
+            });
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><code>test()</code> — a single test case</div>
+          <p>
+            The <code>page</code> parameter is a <strong>fixture</strong> — Playwright automatically creates a fresh browser tab for each test and destroys it after. You never manage browsers yourself.
+          </p>
+          <div class="code-block">
+            <span class="cmd">test</span>(<span class="str">'should redirect after login'</span>, async ({ <span class="var">page</span> }) => {<br>
+            &nbsp;&nbsp;<span class="comment">// page is a fresh browser tab — isolated from other tests</span><br>
+            });
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label accent-color">beforeAll</div>
+            <div class="value">
+              Runs <strong>once</strong> before all tests in the describe block. Use for expensive setup like database seeding. Runs once per suite, not per test.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">beforeEach</div>
+            <div class="value">
+              Runs before <strong>each individual</strong> test. Use for per-test setup like navigating to the starting page so every test begins in the same state.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <span class="cmd">test</span>.<span class="val">beforeAll</span>(async () => {<br>
+          &nbsp;&nbsp;await <span class="cmd">resetAndSeed</span>(); <span class="comment">// DB in known state — runs once</span><br>
+          });<br><br>
+          <span class="cmd">test</span>.<span class="val">beforeEach</span>(async ({ <span class="var">page</span> }) => {<br>
+          &nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">goto</span>(<span class="str">'/login'</span>); <span class="comment">// every test starts on the login page</span><br>
+          });
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 3: Fixtures -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">③</span>
+          </div>
+          <h2>Fixtures</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">What is a fixture?</div>
+          <p>
+            Something Playwright <strong>prepares before</strong> your test runs and <strong>cleans up after</strong> it finishes. You declare what you need, Playwright handles the lifecycle. Similar in spirit to JUnit's <code>@BeforeEach</code> / <code>@AfterEach</code>, but with cleaner syntax.
+          </p>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Key analogy</div>
+          <p>
+            Like fixtures in a physical workshop that hold a piece steady while you work on it — they're "fixed in place" before the real work begins.
+          </p>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Fixture</th><th>What it provides</th></tr>
+          <tr><td>page</td><td>A fresh browser tab — the most common fixture. Isolated per test.</td></tr>
+          <tr><td>context</td><td>A full browser context — useful when you need multiple tabs.</td></tr>
+          <tr><td>browser</td><td>The browser instance itself — rarely needed directly.</td></tr>
+          <tr><td>request</td><td>An API request context — useful for setting up preconditions via API calls.</td></tr>
+        </table>
+
+        <div class="card" style="margin-top: 12px;">
+          <div class="card-title">Custom fixtures</div>
+          <p>
+            You can create your own fixtures for reusable preconditions — e.g. a <code>loggedInPage</code> that handles login before each test. This keeps tests clean and avoids repetitive setup.
+          </p>
+          <div class="code-block">
+            <span class="cmd">export const</span> <span class="var">test</span> = <span class="cmd">base</span>.<span class="val">extend</span>({<br>
+            &nbsp;&nbsp;<span class="var">loggedInPage</span>: async ({ <span class="var">page</span>, <span class="var">request</span> }, <span class="cmd">use</span>) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Setup: login via API</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="cmd">const</span> <span class="var">token</span> = await <span class="cmd">loginViaAPI</span>(<span class="var">request</span>);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">context</span>().<span class="val">addCookies</span>([...]);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;await <span class="cmd">use</span>(<span class="var">page</span>); <span class="comment">// hand ready page to test</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Teardown: automatic</span><br>
+            &nbsp;&nbsp;},<br>
+            });
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 4: Interacting with the Page -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">④</span>
+          </div>
+          <h2>Interacting with the Page</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><code>page.goto()</code> — navigation</div>
+          <p>
+            Navigates the browser. Uses the <code>baseURL</code> from <code>playwright.config.ts</code>, so <code>'/login'</code> becomes <code>http://localhost:3000/login</code>.
+          </p>
+          <div class="code-block">
+            await <span class="var">page</span>.<span class="cmd">goto</span>(<span class="str">'/login'</span>);
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><code>page.getByRole()</code> — finding elements</div>
+          <p>
+            Playwright's recommended approach — it mirrors how a real user perceives the page. They see "a text field labeled email", not <code>&lt;input id="email-field"&gt;</code>. The regex <code>/email/i</code> is a case-insensitive match on the accessible name.
+          </p>
+          <div class="code-block">
+            <span class="comment">// Find by accessible role — recommended approach</span><br>
+            <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'textbox'</span>, { name: <span class="val">/email/i</span> })<br>
+            <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'button'</span>, { name: <span class="val">/sign in/i</span> })<br><br>
+            <span class="comment">// Other locator methods</span><br>
+            <span class="var">page</span>.<span class="cmd">getByText</span>(<span class="str">'Welcome'</span>)<br>
+            <span class="var">page</span>.<span class="cmd">getByLabel</span>(<span class="str">'Password'</span>)
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label accent-color">fill()</div>
+            <div class="value">
+              Clears the input and types the value. Simulates a user typing into a form field.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">click()</div>
+            <div class="value">
+              Clicks an element. Playwright auto-waits for the element to be visible and clickable before acting.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <span class="comment">// Complete interaction example</span><br>
+          await <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'textbox'</span>, { name: <span class="val">/email/i</span> }).<span class="cmd">fill</span>(<span class="str">'user@test.com'</span>);<br>
+          await <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'textbox'</span>, { name: <span class="val">/password/i</span> }).<span class="cmd">fill</span>(<span class="str">'secret123'</span>);<br>
+          await <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'button'</span>, { name: <span class="val">/sign in/i</span> }).<span class="cmd">click</span>();
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 5: Assertions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">⑤</span>
+          </div>
+          <h2>Assertions</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Playwright assertions auto-wait</div>
+          <p>
+            Unlike Jest's instant assertions, Playwright assertions <strong>poll repeatedly</strong> until the condition is met or the timeout expires (default: 5 seconds). No need for <code>setTimeout</code> or manual <code>waitFor</code> calls.
+          </p>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Assertion</th><th>What it checks</th></tr>
+          <tr><td>expect(page).toHaveURL('/')</td><td>Browser URL matches. Auto-waits for redirects.</td></tr>
+          <tr><td>expect(locator).toBeVisible()</td><td>Element is visible on the page.</td></tr>
+          <tr><td>expect(locator).toHaveText('...')</td><td>Element's text content matches.</td></tr>
+          <tr><td>expect(locator).not.toBeVisible()</td><td>Negated — element should NOT be on screen.</td></tr>
+        </table>
+
+        <div class="code-block">
+          <span class="comment">// After login, assert the redirect happened</span><br>
+          await <span class="cmd">expect</span>(<span class="var">page</span>).<span class="val">toHaveURL</span>(<span class="str">'/'</span>);<br><br>
+          <span class="comment">// Assert a welcome message is visible</span><br>
+          await <span class="cmd">expect</span>(<span class="var">page</span>.<span class="cmd">getByText</span>(<span class="str">'Welcome, Admin'</span>)).<span class="val">toBeVisible</span>();<br><br>
+          <span class="comment">// Assert an error is NOT shown</span><br>
+          await <span class="cmd">expect</span>(<span class="var">page</span>.<span class="cmd">getByText</span>(<span class="str">'Invalid credentials'</span>)).<span class="val">not</span>.<span class="val">toBeVisible</span>();
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 6: Auto-Wait & Race Conditions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">⑥</span>
+          </div>
+          <h2>Auto-Wait & Race Conditions</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">What is a race condition?</div>
+          <p>
+            When the outcome depends on the timing of two things happening, and that timing isn't guaranteed. In E2E testing: your test clicks a button that triggers an API call, and the next line checks for a result that isn't there yet. Sometimes the API is fast enough and the test passes. Sometimes it isn't, and the test fails — not because your app is broken, but because the test and the app were "racing" each other.
+          </p>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--accent);">
+            Test clicks button<br><span style="font-size:11px;color:var(--text-muted);">API call starts</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--orange);">
+            Test checks result<br><span style="font-size:11px;color:var(--text-muted);">API still loading...</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--pink);">
+            💥 Test fails<br><span style="font-size:11px;color:var(--text-muted);">Element not found yet</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">How Playwright solves this</div>
+          <p>
+            Playwright auto-waits for actionability checks before every action and polls assertions until they pass. No <code>sleep(2000)</code> hacks needed.
+          </p>
+          <ul>
+            <li><strong><code>fill()</code></strong> — waits for the input to be visible and editable</li>
+            <li><strong><code>click()</code></strong> — waits for the button to be visible and not covered by another element</li>
+            <li><strong><code>toHaveURL()</code></strong> — polls the URL until it matches or times out</li>
+            <li><strong><code>toBeVisible()</code></strong> — polls until the element appears or times out</li>
+          </ul>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Important distinction</div>
+          <p>
+            <code>await</code> is a JavaScript language requirement for Promises — you always need it. Auto-waiting is Playwright's internal smart behaviour that happens <em>inside</em> those awaited methods. Forgetting <code>await</code> causes exactly the race conditions Playwright is designed to prevent.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 7: Testing with Preconditions -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">⑦</span>
+          </div>
+          <h2>Testing with Preconditions</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">The problem</div>
+          <p>
+            Testing "create a manual step" requires the user to be logged in, have picked a project, and have a manual already. Clicking through all those UI flows in every test is slow, fragile, and means a broken login page fails <strong>every</strong> test in your suite.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">The principle</div>
+          <p>
+            <strong>Only test the thing you're actually testing through the UI.</strong> Everything else (login, project creation, manual creation) should be set up via shortcuts — API calls or database seeding.
+          </p>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--green);">
+            Login via API<br><span style="font-size:11px;color:var(--text-muted);">Fast, no UI</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--green);">
+            Create project via API<br><span style="font-size:11px;color:var(--text-muted);">Fast, no UI</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--green);">
+            Create manual via API<br><span style="font-size:11px;color:var(--text-muted);">Fast, no UI</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--accent);">
+            Test step creation<br><span style="font-size:11px;color:var(--text-muted);">Through the UI ✓</span>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <span class="cmd">test</span>(<span class="str">'create manual step'</span>, async ({ <span class="var">page</span>, <span class="var">request</span> }) => {<br>
+          &nbsp;&nbsp;<span class="comment">// Preconditions via API — fast, no UI involved</span><br>
+          &nbsp;&nbsp;<span class="cmd">const</span> <span class="var">token</span> = await <span class="cmd">loginViaAPI</span>(<span class="var">request</span>);<br>
+          &nbsp;&nbsp;<span class="cmd">const</span> <span class="var">project</span> = await <span class="cmd">createProjectViaAPI</span>(<span class="var">request</span>, <span class="var">token</span>);<br>
+          &nbsp;&nbsp;<span class="cmd">const</span> <span class="var">manual</span> = await <span class="cmd">createManualViaAPI</span>(<span class="var">request</span>, <span class="var">token</span>, <span class="var">project</span>.id);<br><br>
+          &nbsp;&nbsp;<span class="comment">// NOW test only the step creation through the UI</span><br>
+          &nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">goto</span>(<span class="str">`/projects/${<span class="var">project</span>.id}/manuals/${<span class="var">manual</span>.id}`</span>);<br>
+          &nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'button'</span>, { name: <span class="val">/add step/i</span> }).<span class="cmd">click</span>();<br>
+          &nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">getByLabel</span>(<span class="str">'Step title'</span>).<span class="cmd">fill</span>(<span class="str">'Install dependencies'</span>);<br>
+          &nbsp;&nbsp;await <span class="var">page</span>.<span class="cmd">getByRole</span>(<span class="str">'button'</span>, { name: <span class="val">/save/i</span> }).<span class="cmd">click</span>();<br><br>
+          &nbsp;&nbsp;await <span class="cmd">expect</span>(<span class="var">page</span>.<span class="cmd">getByText</span>(<span class="str">'Install dependencies'</span>)).<span class="val">toBeVisible</span>();<br>
+          });
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 8: Measuring Performance -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">⑧</span>
+          </div>
+          <h2>Measuring Performance</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Basic timing check</div>
+          <p>
+            Playwright's main job is "does it work?", not "how fast is it?" — but you can do simple timing checks. For serious performance testing, use dedicated tools like Lighthouse, k6, or WebPageTest.
+          </p>
+          <div class="code-block">
+            <span class="cmd">const</span> <span class="var">start</span> = <span class="cmd">Date</span>.now();<br>
+            await <span class="var">page</span>.<span class="cmd">click</span>(<span class="str">'#load-data'</span>);<br>
+            await <span class="cmd">expect</span>(<span class="var">page</span>.<span class="cmd">getByText</span>(<span class="str">'Data loaded'</span>)).<span class="val">toBeVisible</span>();<br>
+            <span class="cmd">const</span> <span class="var">duration</span> = <span class="cmd">Date</span>.now() - <span class="var">start</span>;<br><br>
+            <span class="cmd">expect</span>(<span class="var">duration</span>).<span class="val">toBeLessThan</span>(<span class="val">3000</span>); <span class="comment">// fail if > 3 seconds</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Takeaway -->
+      <div class="takeaway">
+        <h3>The Golden Rule of E2E Testing</h3>
+        <p>
+          Only one test should go through the login UI (your login test). Only one test should create a project through the UI (your project creation test). Every other test that needs those as preconditions should set them up via API calls — keeping each test fast, focused, and independent.
+        </p>
+      </div>
+
+      <!-- Parallels -->
+      <div class="card" style="margin-top: 32px;">
+        <div class="card-title">🔄 Parallels you discovered</div>
+        <ul>
+          <li>
+            <strong>JUnit <code>@BeforeEach</code></strong> ≈ <strong>Playwright fixtures</strong> — both handle setup/teardown, but fixtures use a cleaner "ask for what you need" syntax
+          </li>
+          <li>
+            <strong>Jest <code>expect(x).toBe(y)</code></strong> ≈ <strong>Playwright <code>expect(locator).toBeVisible()</code></strong> — same idea, but Playwright assertions auto-retry
+          </li>
+          <li>
+            <strong>JavaScript <code>await</code></strong> for Promises is separate from <strong>Playwright auto-waiting</strong> — you always need <code>await</code>, auto-wait happens inside the methods
+          </li>
+          <li>
+            <strong>Unit test mocking</strong> isolates code from dependencies — <strong>E2E API shortcuts</strong> isolate tests from UI dependencies for the same reason: speed and reliability
+          </li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
