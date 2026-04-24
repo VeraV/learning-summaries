@@ -184,6 +184,19 @@ body.page-index h1 {
   color: var(--accent);
 }
 
+.btn-jest {
+  border-color: rgba(240, 78, 152, 0.25);
+}
+.btn-jest:hover {
+  border-color: var(--pink);
+}
+.btn-jest .btn-icon {
+  background: var(--pink-soft);
+}
+.btn-jest .label {
+  color: var(--pink);
+}
+
 /* ==================
    CONTENT PAGES
    ================== */

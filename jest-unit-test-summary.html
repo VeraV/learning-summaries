@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jest Unit Tests - Learning Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .header::before {
+        background:
+          radial-gradient(circle at 30% 50%, rgba(240, 78, 152, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 70% 50%, rgba(180, 142, 255, 0.04) 0%, transparent 50%);
+      }
+      .header h1 span.jest { color: var(--pink); }
+      .header h1 span.unit { color: var(--purple); }
+      .takeaway {
+        background: linear-gradient(135deg, rgba(240, 78, 152, 0.08) 0%, rgba(180, 142, 255, 0.06) 100%);
+        border: 1px solid rgba(240, 78, 152, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-badge">Learning Session Summary</div>
+        <h1><span class="jest">Jest</span> & <span class="unit">Unit Testing</span></h1>
+        <p>
+          Pinning a spec down with a targeted unit test — reaching into library internals, patching jsdom, and typing mocks precisely
+        </p>
+      </div>
+
+      <!-- Section 1: Big Picture -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon pink-bg">
+            <span class="pink-color">①</span>
+          </div>
+          <h2>The Big Picture</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">What the test pins down</div>
+          <p>
+            The error-handling spec defines what the axios response interceptor must do. <code>axios.spec.ts</code> is a unit test that pins exactly those rules — nothing more, nothing less.
+          </p>
+          <ul>
+            <li><strong>On 401</strong> — clear <code>localStorage</code> (token, userId, email, name) and redirect to <code>/login</code></li>
+            <li><strong>Loop prevention</strong> — skip the redirect if already on <code>/login</code></li>
+            <li><strong>Non-401 errors</strong> — bubble up to the caller untouched</li>
+            <li><strong>Network errors</strong> — also bubble up, without touching storage or location</li>
+          </ul>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Mental model</div>
+          <p>
+            A unit test isolates <em>just the one function</em> the spec describes. Rather than firing a real HTTP request and mocking the transport, we grab the registered rejected handler directly and invoke it with a fabricated error.
+          </p>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Spec line</th><th>Test</th></tr>
+          <tr><td>clears storage + redirects</td><td>Test 1 — clears auth data and redirects to /login on 401</td></tr>
+          <tr><td>loop prevention</td><td>Test 2 — clears storage but does not redirect when already on /login</td></tr>
+          <tr><td>non-401 bubbles</td><td>Test 3 — bubbles non-401 errors without touching storage or location</td></tr>
+          <tr><td>network error bubbles</td><td>Test 4 — bubbles network errors without touching storage or location</td></tr>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 2: File Structure -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">②</span>
+          </div>
+          <h2>File Structure, Top to Bottom</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">① Reach into the registered handler</div>
+          <p>
+            When <code>axios.ts</code> is imported, it calls <code>api.interceptors.response.use(success, error)</code>. Axios stores those callbacks in an internal <code>handlers[]</code> array. We grab the rejected function directly:
+          </p>
+          <div class="code-block">
+            <span class="cmd">const</span> responseHandler = (<br>
+            &nbsp;&nbsp;api.interceptors.response <span class="cmd">as unknown as</span> { handlers: ResponseHandler[] }<br>
+            ).handlers[<span class="val">0</span>];
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">② Patch jsdom's <code>location.href</code> setter</div>
+          <p>
+            jsdom treats <code>window.location</code> and <code>location.href</code> as non-configurable — you can't <code>jest.spyOn</code> them. We reach through the hidden <code>Symbol("impl")</code> key, grab its prototype, and swap <code>href</code>'s setter for <code>jest.fn()</code>. Restored in <code>afterAll</code>.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">③ Reset between tests</div>
+          <p>
+            <code>localStorage.clear()</code> and <code>hrefSetter.mockClear()</code> so each test starts from a known state.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">④ Each test follows the same three-beat shape</div>
+          <ul>
+            <li><strong>Arrange</strong> — seed <code>localStorage</code>, set the path via <code>window.history.pushState(...)</code>, build a fake <code>AxiosError</code></li>
+            <li><strong>Act</strong> — <code>await responseHandler.rejected(error)</code> and assert it re-rejects the same error</li>
+            <li><strong>Assert</strong> — check <code>localStorage</code> was / wasn't cleared, and that <code>hrefSetter</code> was / wasn't called with <code>/login</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 3: ResponseHandler type -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon pink-bg">
+            <span class="pink-color">③</span>
+          </div>
+          <h2>The <code>ResponseHandler</code> Type</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">A hand-written description of axios internals</div>
+          <p>
+            <code>ResponseHandler</code> isn't imported from axios — axios doesn't export it. It's a local TypeScript type describing what we expect to find in <code>handlers[]</code>:
+          </p>
+          <div class="code-block">
+            <span class="cmd">type</span> <span class="val">ResponseHandler</span> = {<br>
+            &nbsp;&nbsp;fulfilled: (value: AxiosResponse) =&gt; AxiosResponse | Promise&lt;AxiosResponse&gt;;<br>
+            &nbsp;&nbsp;rejected: (error: AxiosError) =&gt; <span class="flag">unknown</span>;<br>
+            };
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label pink-color">fulfilled</div>
+            <div class="value">
+              The success callback — takes a response, returns it (possibly transformed) or a promise of it.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label purple-color">rejected</div>
+            <div class="value">
+              The error callback — takes an <code>AxiosError</code> and can do anything. Our code returns <code>Promise.reject(error)</code>, hence <code>unknown</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why write it</div>
+          <p>
+            Think of it as: "Here's my understanding of axios's internal data structure; please check my code against this." Without it, every access to <code>handlers[0]</code> would be <code>any</code> and you'd lose all type safety inside the tests.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 4: as unknown as -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">④</span>
+          </div>
+          <h2>The <code>as unknown as</code> Double Cast</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">TypeScript's escape hatch for incompatible casts</div>
+          <p>
+            In TypeScript you can cast <code>A as B</code> directly only if the two types overlap. <code>api.interceptors.response</code> is typed as <code>AxiosInterceptorManager&lt;AxiosResponse&gt;</code>, which publicly exposes only <code>use</code>, <code>eject</code>, and <code>clear</code>. There's no <code>handlers</code> in the public type.
+          </p>
+          <div class="code-block">
+            <span class="comment">// ERROR — types don't overlap</span><br>
+            api.interceptors.response <span class="cmd">as</span> { handlers: ResponseHandler[] }<br><br>
+            <span class="comment">// Works — unknown is the reset button</span><br>
+            api.interceptors.response <span class="cmd">as unknown as</span> { handlers: ResponseHandler[] }
+          </div>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--pink);">Original type<br><span style="font-size:11px;color:var(--text-muted);">public API only</span></div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--text-muted);"><code>as unknown</code><br><span style="font-size:11px;color:var(--text-muted);">forget everything</span></div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--purple);"><code>as NewType</code><br><span style="font-size:11px;color:var(--text-muted);">re-assert shape</span></div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">In plain English</div>
+          <p>
+            <code>as unknown as X</code> means: "I know better than you — this value really is shaped like <code>X</code>, trust me." A two-step force-cast, needed here because <code>handlers</code> is private axios internals that the public type intentionally hides.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 5: Symbol(impl) -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon pink-bg">
+            <span class="pink-color">⑤</span>
+          </div>
+          <h2>The <code>Symbol("impl")</code> Trick</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Symbols, briefly</div>
+          <p>
+            A Symbol is a unique, unforgeable property key. Regular property keys are strings (<code>obj.foo</code>); a symbol-keyed property becomes invisible to normal iteration — it won't show up in <code>Object.keys()</code> or <code>for...in</code>.
+          </p>
+          <div class="code-block">
+            <span class="cmd">const</span> hidden = <span class="val">Symbol</span>(<span class="str">"secret"</span>);<br>
+            <span class="cmd">const</span> obj = { visible: <span class="val">1</span>, [hidden]: <span class="val">2</span> };<br><br>
+            <span class="val">Object</span>.keys(obj);                   <span class="comment">// ["visible"]</span><br>
+            <span class="val">Object</span>.getOwnPropertySymbols(obj);  <span class="comment">// [Symbol(secret)]</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">How jsdom uses it</div>
+          <p>
+            jsdom's <code>window.location</code> is the WHATWG-spec facade. The actual implementation (URL parsing, navigation, inner state) lives on a separate <code>LocationImpl</code> object, attached to the facade under a hidden symbol key whose description is <code>"impl"</code>:
+          </p>
+          <div class="code-block">
+            <span class="comment">// jsdom does (conceptually):</span><br>
+            <span class="cmd">const</span> implSymbol = <span class="val">Symbol</span>(<span class="str">"impl"</span>);<br>
+            window.location[implSymbol] = <span class="cmd">new</span> <span class="val">LocationImpl</span>(...);
+          </div>
+          <p style="margin-top: 12px;">
+            When user code does <code>window.location.href = "/login"</code>, the facade's setter internally does <code>this[implSymbol].href = value</code> — delegating to the impl.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Why the test needs it</div>
+          <p>
+            The facade's <code>href</code> setter is locked non-configurable by WHATWG spec. But the <code>impl</code>'s <code>href</code> setter on its prototype is <strong>configurable</strong>. So we dig through the symbol to find the impl, get its prototype, and swap in our jest mock. The facade keeps delegating to the impl, which now hits our mock.
+          </p>
+          <div class="code-block">
+            <span class="cmd">const</span> implSymbol = <span class="val">Object</span>.getOwnPropertySymbols(window.location).find(<br>
+            &nbsp;&nbsp;(s) =&gt; s.description === <span class="str">"impl"</span>,<br>
+            ) <span class="cmd">as</span> symbol;
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 6: jest.fn generics -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">⑥</span>
+          </div>
+          <h2>Typing the Mock: <code>jest.fn&lt;void, [string]&gt;()</code></h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Two generic parameters describe the signature</div>
+          <div class="code-block">
+            <span class="val">jest</span>.fn&lt;TReturn, TArgs <span class="cmd">extends</span> any[]&gt;()<br>
+            <span class="comment">//       ^^^^^^^  ^^^^^^^^^^^^^^^^^^^</span><br>
+            <span class="comment">//       what it  the types of its</span><br>
+            <span class="comment">//       returns  arguments, as a tuple</span>
+          </div>
+          <p style="margin-top: 12px;">
+            So <code>jest.fn&lt;void, [string]&gt;()</code> means: returns nothing (mimics a setter), takes one argument of type <code>string</code>.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Square brackets = tuple, not array</div>
+          <p>
+            The <code>[string]</code> wrapping is important — it means a fixed tuple of exactly one string, not an array of strings. TypeScript distinguishes:
+          </p>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Syntax</th><th>Meaning</th></tr>
+          <tr><td>string[]</td><td>Array of any number of strings</td></tr>
+          <tr><td>[string]</td><td>Exactly one argument, a string</td></tr>
+          <tr><td>[string, number]</td><td>Exactly two args: a string, then a number</td></tr>
+          <tr><td>[string, ...number[]]</td><td>First arg string, then any number of numbers</td></tr>
+        </table>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why tuples</div>
+          <p>
+            Function argument lists are <em>ordered and fixed-arity</em>, not arrays. Tuples describe that precisely. TypeScript will now warn you if you call <code>hrefSetter()</code> with no args or with a number.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 7: Prototype -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon pink-bg">
+            <span class="pink-color">⑦</span>
+          </div>
+          <h2>The Prototype Chain</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Every object has a hidden link to another</div>
+          <p>
+            When you access a property on an object and it doesn't have that property directly, JS walks up the prototype chain looking for it.
+          </p>
+          <div class="code-block">
+            <span class="cmd">class</span> <span class="val">Dog</span> {<br>
+            &nbsp;&nbsp;bark() { console.log(<span class="str">"woof"</span>); }<br>
+            }<br><br>
+            <span class="cmd">const</span> rex = <span class="cmd">new</span> <span class="val">Dog</span>();<br>
+            rex.bark();  <span class="comment">// works — bark lives on Dog.prototype, not on rex</span>
+          </div>
+          <p style="margin-top: 12px;">
+            <code>Object.getPrototypeOf(rex)</code> returns <code>Dog.prototype</code> — the object one step up the chain.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Why target the prototype, not the instance?</div>
+          <ul>
+            <li><strong>The setter lives there</strong> — class accessors (<code>set href(v) {}</code>) are defined on the prototype by class syntax, not on each instance</li>
+            <li><strong>It's configurable there</strong> — unlike the facade's own <code>href</code> property, which is locked per WHATWG spec</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">The chain visually</div>
+          <div class="code-block">
+            window.location                     <span class="comment">← facade (own href — locked)</span><br>
+            &nbsp;&nbsp;│<br>
+            &nbsp;&nbsp;│ [<span class="str">Symbol("impl")</span>] → LocationImpl instance<br>
+            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│ [[Prototype]] → LocationImpl.prototype  <span class="comment">← OUR TARGET</span><br>
+            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<br>
+            &nbsp;&nbsp;│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│  set href(v) {...}  <span class="comment">← we replace this</span>
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Flow when href is set</div>
+          <p>
+            <code>window.location.href = "/login"</code> → facade's setter runs → delegates to <code>impl.href = "/login"</code> → impl has no own <code>href</code>, so JS walks up → finds our <code>jest.fn</code> on <code>LocationImpl.prototype</code> → mock records the call. Non-configurable property intercepted, spec compliance intact.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 8: TL;DR -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon purple-bg">
+            <span class="purple-color">⑧</span>
+          </div>
+          <h2>TL;DR — Five Tricky Pieces</h2>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Concept</th><th>What it is</th></tr>
+          <tr><td>ResponseHandler</td><td>Hand-written type describing axios's internal <code>{fulfilled, rejected}</code> entry</td></tr>
+          <tr><td>as unknown as</td><td>Two-step force-cast to bypass TS's "types don't overlap" check</td></tr>
+          <tr><td>Symbol("impl")</td><td>Hidden key jsdom uses to attach the real Location implementation to the facade</td></tr>
+          <tr><td>jest.fn&lt;void, [string]&gt;</td><td>Mock typed as <code>(arg: string) =&gt; void</code> — the <code>[string]</code> is a tuple, not an array</td></tr>
+          <tr><td>prototype</td><td>Object one step up the chain where class methods/accessors actually live</td></tr>
+        </table>
+      </div>
+
+      <!-- Takeaway -->
+      <div class="takeaway">
+        <h3>Key Takeaway</h3>
+        <p>
+          A good unit test isolates exactly one thing the spec describes — nothing more. When the target hides behind library internals or browser specs, you reach through the layers (private fields, hidden symbols, prototypes) rather than mocking at a higher level. The tests stay narrow and honest about what they're actually pinning down.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
