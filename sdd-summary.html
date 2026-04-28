@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SDD - Learning Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .header::before {
+        background:
+          radial-gradient(circle at 30% 50%, rgba(255, 138, 80, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 70% 50%, rgba(0, 188, 212, 0.04) 0%, transparent 50%);
+      }
+      .header h1 span.sdd { color: var(--orange); }
+      .header h1 span.full { color: var(--accent); font-size: 0.6em; font-weight: 400; }
+      .takeaway {
+        background: linear-gradient(135deg, rgba(255, 138, 80, 0.08) 0%, rgba(0, 188, 212, 0.06) 100%);
+        border: 1px solid rgba(255, 138, 80, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-badge">Learning Session Summary</div>
+        <h1><span class="sdd">SDD</span> <span class="full">(Spec-Driven Development)</span></h1>
+        <p>
+          What a spec is, four ways teams keep them alive, and how the lifecycle plays out across a multi-repo project
+        </p>
+      </div>
+
+      <!-- Section 1: What SDD Is -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">①</span>
+          </div>
+          <h2>What SDD Is</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">The one-line definition</div>
+          <p>
+            <strong>Spec-Driven Development</strong> is the practice of writing a structured specification — describing intent, scope, and constraints — before or alongside the code that implements it. The spec is the contract; tests and code are how you keep your end of it.
+          </p>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why bother</div>
+          <p>
+            A spec separates <em>what we agreed to build</em> from <em>what's currently in main</em>. Without that separation, the only source of truth is the code — and "what we meant to do" gets lost the moment a contributor leaves or a feature evolves.
+          </p>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label orange-color">Who writes it</div>
+            <div class="value">
+              In small teams: usually the engineer building the feature drafts the spec; PM/lead reviews it. In larger orgs: PMs write the <em>What</em> and <em>Why</em>; engineers fill in <em>Constraints</em>, <em>Tasks</em>, and <em>Validation</em>. Either way, it's a collaborative artifact, not a one-person decision.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label accent-color">Spec-first vs. code-first</div>
+            <div class="value">
+              <strong>Spec-first:</strong> write the spec before any code. Catches scope and edge cases early; slower to start. <strong>Code-first (a.k.a. "spec the existing thing"):</strong> reverse-engineer a spec from working code so it can be maintained going forward. Most real teams blend the two — spec-first for new features, code-first when adopting SDD on a legacy codebase.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 2: Spec Structure -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">②</span>
+          </div>
+          <h2>The Anatomy of a Spec</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          A good spec template has fixed sections so readers always know where to find a given piece of information. The seven below are the ones that show up across most SDD templates.
+        </p>
+
+        <table class="ref-table">
+          <tr><th>Section</th><th>What goes here</th></tr>
+          <tr><td>Why</td><td>1–2 sentences. The problem this solves and why now.</td></tr>
+          <tr><td>What</td><td>The concrete deliverable, specific enough that you'd know when it's done.</td></tr>
+          <tr><td>Constraints</td><td>Three subsections: <em>Must</em> (required patterns/libraries), <em>Must Not</em> (forbidden — e.g., no new deps), <em>Out of Scope</em> (adjacent work explicitly not included).</td></tr>
+          <tr><td>Current State</td><td>What already exists. Saves the next contributor from re-exploring the codebase.</td></tr>
+          <tr><td>Tasks</td><td>The work broken into discrete units. Each task lists <strong>What</strong>, <strong>Files</strong>, and <strong>Verify</strong> (the command or check that proves it's done).</td></tr>
+          <tr><td>Validation</td><td>End-to-end verification once <em>all</em> tasks are complete — automated suites, manual UI checks, cross-feature dependencies.</td></tr>
+        </table>
+
+        <div class="analogy-box">
+          <div class="analogy-label">The "Verify per task" idea</div>
+          <p>
+            Each task gets a one-line proof that it works — usually a single test command. The aggregate of all <em>Verify</em> lines tells you, at a glance, which parts of the feature have automated coverage and which don't. The <em>Validation</em> section is the cumulative version: "if all tasks are green, here's how I check the whole feature still hangs together."
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 3: Four Lifecycle Patterns -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">③</span>
+          </div>
+          <h2>Four Patterns for Spec Lifecycle</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          Once a spec exists, what happens to it as the code changes? Real teams pick (or drift into) one of these four patterns.
+        </p>
+
+        <div class="card">
+          <div class="card-title"><span class="orange-color">①</span> Living spec</div>
+          <p>
+            The spec is kept in sync with the code. PRs that change behavior also update the spec.
+          </p>
+          <ul>
+            <li><strong>Pro:</strong> the spec stays trustworthy — you can rely on it to answer "what does this do today?"</li>
+            <li><strong>Con:</strong> requires discipline; without enforcement during code review, drift sneaks in fast (especially in <em>Verify</em> and <em>Current State</em>).</li>
+            <li><strong>Common in:</strong> product engineering teams that treat docs as part of the definition of done.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="accent-color">②</span> Frozen spec + amendments</div>
+          <p>
+            The original spec is preserved as a record of intent at time of build. New scope means a new spec, or an "Amendment N" appended at the bottom of the existing one.
+          </p>
+          <ul>
+            <li><strong>Pro:</strong> history is preserved — you can see what was decided and when.</li>
+            <li><strong>Con:</strong> to know the current truth you have to read the original plus every amendment.</li>
+            <li><strong>Common in:</strong> regulated environments (medical, finance, aerospace) where audit trails matter.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="orange-color">③</span> ADRs (Architecture Decision Records)</div>
+          <p>
+            Append-only log of decisions. Each new decision gets its own short document; if it supersedes a previous one, the old ADR is marked "Superseded by ADR-N" but never edited.
+          </p>
+          <ul>
+            <li><strong>Pro:</strong> small, focused units; easy to grep for "why does this work this way?"</li>
+            <li><strong>Con:</strong> doesn't describe the <em>current</em> state — only the chain of decisions that produced it.</li>
+            <li><strong>Common in:</strong> mature engineering orgs; pairs well with a separate "living overview" doc.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="accent-color">④</span> Spec dies after implementation</div>
+          <p>
+            The spec is a planning artifact, used once during implementation and then ignored. Code, tests, and READMEs become the source of truth.
+          </p>
+          <ul>
+            <li><strong>Pro:</strong> zero maintenance burden.</li>
+            <li><strong>Con:</strong> intent is lost — six months later, no one knows whether a behavior is intentional or accidental.</li>
+            <li><strong>Common in:</strong> fast-moving startups, prototype work, hackathons.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 4: Verify + Validation Mechanics -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon accent-bg">
+            <span class="accent-color">④</span>
+          </div>
+          <h2>Verify &amp; Validation — The Living-Spec Mechanics</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          The parts of a spec that rot fastest are the test-coverage claims. Two conventions keep them honest.
+        </p>
+
+        <div class="card">
+          <div class="card-title">Per-task <code>Verify</code> — pick one of four</div>
+          <table class="ref-table">
+            <tr><th>Wording</th><th>When to use</th></tr>
+            <tr><td><code>&lt;command to run&gt;</code></td><td>There's a dedicated test for this task.</td></tr>
+            <tr><td><code>No dedicated test; indirectly covered by &lt;command&gt;.</code></td><td>The behavior is exercised under a related test (e.g., a repository tested through its service).</td></tr>
+            <tr><td><code>No tests cover this task yet.</code></td><td>A test is missing but warranted.</td></tr>
+            <tr><td><code>No tests — type-only, intentionally not covered.</code></td><td>For type definitions or trivially presentational components.</td></tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">The <code>Validation</code> section — three sub-blocks</div>
+          <ul>
+            <li><strong>Automated checks</strong> — full suites per layer (<code>npm test</code>, <code>./mvnw test</code>) plus the feature-specific test files.</li>
+            <li><strong>Manual checks (UI)</strong> — numbered user flows: happy path, edge cases pulled from <em>Constraints</em> and <em>Out of Scope</em>, auth/routing/empty-state checks.</li>
+            <li><strong>Cross-feature dependencies</strong> — other specs whose tests or seed data this feature relies on; tests referenced by more than one spec.</li>
+          </ul>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why these two specifically</div>
+          <p>
+            Constraints rarely lie — they're upstream of the work. The <em>What</em> rarely lies — it's broad. But "this is covered by test X" is the kind of claim that becomes wrong the moment a test is renamed, removed, or never written. Forcing every task to declare its verification status, in one of four standard wordings, makes the lying visible.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 5: Project Example -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon orange-bg">
+            <span class="orange-color">⑤</span>
+          </div>
+          <h2>Worked Example — A Multi-Repo Project</h2>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          Three repos, one spec library. Each repo has a different test runner and CI; the specs live separately so they describe both layers without belonging to either.
+        </p>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label orange-color">Docs repo</div>
+            <div class="value">
+              <a href="https://github.com/VeraV/yoga-path-docs" target="_blank" rel="noopener">yoga-path-docs</a><br>
+              One markdown file per feature: <code>jwt-auth-spec.md</code>, <code>profile-spec.md</code>, <code>practice-log-spec.md</code>, etc. Plus a <code>spec.example.md</code> template. No code.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label accent-color">Client repo</div>
+            <div class="value">
+              <a href="https://github.com/VeraV/yoga-path-client" target="_blank" rel="noopener">yoga-path-client</a><br>
+              React + TypeScript. Tests via Jest + React Testing Library (<code>npm test</code>). Lint and tests run in <strong>GitHub Actions</strong>; deploys to <strong>Vercel</strong> on merge to <code>main</code>.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label orange-color">Server repo</div>
+            <div class="value">
+              <a href="https://github.com/VeraV/yoga-path-server" target="_blank" rel="noopener">yoga-path-server</a><br>
+              Spring Boot + JPA. Tests via JUnit (<code>./mvnw test</code>). Test classes target services and controllers; commands like <code>./mvnw test -Dtest=AuthServiceTest</code> run a single suite.
+            </div>
+          </div>
+          <div class="concept-card">
+            <div class="label accent-color">Why three repos</div>
+            <div class="value">
+              The docs need to outlive any single layer. If the client gets rewritten in a different framework or the server gets split, the spec library survives intact and the new implementation has something to be measured against.
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-title">Workflow — feature, bug, or test work</div>
+          <p>
+            Whatever kind of change goes through the same loop: create a feature branch, work in the relevant repo, open a PR, then update the spec <em>after</em> the PR merges to <code>main</code>.
+          </p>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--orange);">
+            <strong>1. Branch</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">feature / fix / tests<br>off main</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--orange);">
+            <strong>2. Build</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">code +<br>tests in repo</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--accent);">
+            <strong>3. PR</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">CI green,<br>review, merge</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--accent);">
+            <strong>4. Update spec</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">in yoga-path-docs<br>after merge</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-title">What gets touched in step 4</div>
+          <table class="ref-table">
+            <tr><th>Change type</th><th>What to update in the spec</th></tr>
+            <tr><td><span class="tag orange-bg orange-color">New feature</span></td><td>Either a <em>new</em> spec file or a new task block in an existing one. Move related items out of <em>Out of Scope</em>. Add <em>Verify</em> + extend <em>Validation</em>.</td></tr>
+            <tr><td><span class="tag accent-bg accent-color">Bug fix</span></td><td>Usually no change — the bug means code disagreed with spec. If the spec was ambiguous about the case, tighten <em>Constraints</em>. Add a <em>Verify</em> if a regression test was added.</td></tr>
+            <tr><td><span class="tag orange-bg orange-color">New tests</span></td><td>Update <em>Verify</em> for any task whose status changes from "no tests yet" to a real command. Add the new test file to the <em>Validation</em> section.</td></tr>
+            <tr><td><span class="tag accent-bg accent-color">Behavior change</span></td><td>Update <em>What</em> and <em>Constraints</em>. Add an entry to <em>Current State</em> if the change leaves an intentional gap (e.g., "service still calls findAll() instead of the sorted query").</td></tr>
+          </table>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why update the spec <em>after</em> the PR merges</div>
+          <p>
+            Updating the spec inside the same PR sounds tidier, but in practice the spec change ends up reviewed alongside code review, where reviewers focus on the diff. Keeping it as a follow-up — in the docs repo — lets the spec change get its own focused review and avoids holding code merges hostage to documentation nits.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Takeaway -->
+      <div class="takeaway">
+        <h3>The takeaway</h3>
+        <p>
+          A spec is only useful if you can trust it. The four lifecycle patterns are really four answers to the question <em>"who keeps this honest, and how?"</em> — and for any non-trivial project, picking that answer up-front matters more than which template you use. Living specs need <em>Verify</em> and <em>Validation</em> as the discipline mechanism; ADRs need supersession rules; frozen specs need a clear amendment process. No mechanism, no trust.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

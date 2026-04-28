@@ -197,6 +197,19 @@ body.page-index h1 {
   color: var(--pink);
 }
 
+.btn-sdd {
+  border-color: rgba(255, 138, 80, 0.25);
+}
+.btn-sdd:hover {
+  border-color: var(--orange);
+}
+.btn-sdd .btn-icon {
+  background: var(--orange-soft);
+}
+.btn-sdd .label {
+  color: var(--orange);
+}
+
 /* ==================
    CONTENT PAGES
    ================== */
