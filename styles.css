@@ -210,6 +210,19 @@ body.page-index h1 {
   color: var(--orange);
 }
 
+.btn-junit {
+  border-color: rgba(0, 201, 167, 0.25);
+}
+.btn-junit:hover {
+  border-color: var(--green);
+}
+.btn-junit .btn-icon {
+  background: var(--green-soft);
+}
+.btn-junit .label {
+  color: var(--green);
+}
+
 /* ==================
    CONTENT PAGES
    ================== */

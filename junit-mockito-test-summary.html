@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JUnit & Mockito - Learning Summary</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .header::before {
+        background:
+          radial-gradient(circle at 30% 50%, rgba(0, 201, 167, 0.06) 0%, transparent 50%),
+          radial-gradient(circle at 70% 50%, rgba(254, 197, 20, 0.04) 0%, transparent 50%);
+      }
+      .header h1 span.junit { color: var(--green); }
+      .header h1 span.mockito { color: var(--yellow); }
+      .takeaway {
+        background: linear-gradient(135deg, rgba(0, 201, 167, 0.08) 0%, rgba(254, 197, 20, 0.06) 100%);
+        border: 1px solid rgba(0, 201, 167, 0.2);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-badge">Learning Session Summary</div>
+        <h1><span class="junit">JUnit</span> & <span class="mockito">Mockito</span></h1>
+        <p>
+          Two libraries, two jobs, working together inside the same test — JUnit runs the show; Mockito provides the stand-in actors
+        </p>
+      </div>
+
+      <!-- Section 1: Big Picture -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">①</span>
+          </div>
+          <h2>The Big Picture</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Two libraries, two jobs</div>
+          <p>
+            <strong>JUnit</strong> is the test framework — it discovers test classes, runs them, and provides assertions and lifecycle hooks. <strong>Mockito</strong> is a mocking library — it creates fake versions of collaborators so you can test one class in isolation, without booting a database or network.
+          </p>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Library</th><th>Role</th></tr>
+          <tr><td>JUnit</td><td>The framework. Discovers test classes, runs them, provides <code>@Test</code>, <code>@BeforeEach</code>, lifecycle, assertions.</td></tr>
+          <tr><td>Mockito</td><td>The mocking library. Creates fake versions of collaborators so you can test one class in isolation.</td></tr>
+        </table>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Mental model</div>
+          <p>
+            JUnit is the <strong>stage</strong> — it sets up the test, runs it, judges pass/fail. Mockito provides the <strong>stand-in actors</strong> — fake collaborators that follow your script so you can rehearse one performer's lines without the rest of the cast.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 2: How it shows up in code -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">
+            <span class="yellow-color">②</span>
+          </div>
+          <h2>How It Shows Up in Code</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><code>AuthServiceTest.java</code> — the wiring</div>
+          <div class="code-block">
+            <span class="flag">@ExtendWith</span>(<span class="val">MockitoExtension</span>.<span class="cmd">class</span>)   <span class="comment">// JUnit hook that activates Mockito's annotations</span><br>
+            <span class="cmd">class</span> <span class="val">AuthServiceTest</span> {<br><br>
+            &nbsp;&nbsp;<span class="flag">@Mock</span> <span class="cmd">private</span> <span class="val">UserRepository</span> userRepository;     <span class="comment">// fake — no real DB</span><br>
+            &nbsp;&nbsp;<span class="flag">@Mock</span> <span class="cmd">private</span> <span class="val">PasswordEncoder</span> passwordEncoder;   <span class="comment">// fake — no real bcrypt</span><br>
+            &nbsp;&nbsp;<span class="flag">@Mock</span> <span class="cmd">private</span> <span class="val">TokenService</span> tokenService;          <span class="comment">// fake — no real JWT signing</span><br><br>
+            &nbsp;&nbsp;<span class="flag">@InjectMocks</span> <span class="cmd">private</span> <span class="val">AuthService</span> authService;    <span class="comment">// the REAL thing under test</span><br>
+            }
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label green-color">@ExtendWith</div>
+            <div class="value">JUnit 5 hook. Tells JUnit "while running this class, also let Mockito process its annotations."</div>
+          </div>
+          <div class="concept-card">
+            <div class="label yellow-color">@Mock</div>
+            <div class="value">Replace this field with a fake. The fake has all the real methods, but they all return null/0/empty by default until you tell them otherwise.</div>
+          </div>
+          <div class="concept-card">
+            <div class="label green-color">@InjectMocks</div>
+            <div class="value">Create the real class under test, with the <code>@Mock</code> fields wired in as its dependencies. No Spring context, no factory — just constructor / setter injection by type.</div>
+          </div>
+          <div class="concept-card">
+            <div class="label yellow-color">@BeforeEach</div>
+            <div class="value">Pure JUnit. Runs before every <code>@Test</code> — used here to build fresh request DTOs so tests don't share mutable state.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 3: A typical test -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">③</span>
+          </div>
+          <h2>A Typical Test, Beat by Beat</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Arrange → Act → Assert</div>
+          <div class="code-block">
+            <span class="flag">@Test</span><br>
+            <span class="cmd">void</span> register_throws_when_email_exists() {<br>
+            &nbsp;&nbsp;<span class="comment">// Arrange — script the fake</span><br>
+            &nbsp;&nbsp;<span class="val">when</span>(userRepository.existsByEmail(<span class="str">"vera@example.com"</span>)).<span class="val">thenReturn</span>(<span class="cmd">true</span>);<br><br>
+            &nbsp;&nbsp;<span class="comment">// Act + Assert (combined here via AssertJ)</span><br>
+            &nbsp;&nbsp;<span class="val">assertThatThrownBy</span>(() -&gt; authService.register(registerRequest))<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.hasMessage(<span class="str">"Email already exists"</span>);<br><br>
+            &nbsp;&nbsp;<span class="comment">// Verify — assert the fake was NOT called</span><br>
+            &nbsp;&nbsp;<span class="val">verify</span>(userRepository, <span class="val">never</span>()).save(<span class="val">any</span>());<br>
+            }
+          </div>
+        </div>
+
+        <div class="concept-grid">
+          <div class="concept-card">
+            <div class="label green-color">when().thenReturn()</div>
+            <div class="value">Script: "when this method is called with these args, return that value." Lets you simulate any DB state instantly — empty, full, error.</div>
+          </div>
+          <div class="concept-card">
+            <div class="label yellow-color">verify()</div>
+            <div class="value">Assert that a method was called (or wasn't). With <code>never()</code>, <code>times(n)</code>, or <code>atLeastOnce()</code>. Lets you prove your code talks to its collaborators correctly.</div>
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Why the verify line matters</div>
+          <p>
+            <code>verify(userRepository, never()).save(any())</code> is what proves the service didn't accidentally save a duplicate to the DB before throwing. Without that line, the test only checks the message — not the safety guarantee. Mockito's <code>verify</code> is the difference between "the right thing happened" and "the wrong thing didn't happen."
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 4: What Mockito gives you -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">
+            <span class="yellow-color">④</span>
+          </div>
+          <h2>What Mockito Gives You That JUnit Alone Can't</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">① Isolation</div>
+          <p>
+            Test <code>AuthService</code> without booting Postgres or Spring's full context. Tests run in milliseconds — a full service-test suite finishes faster than one integration test would start.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">② Control</div>
+          <p>
+            <code>when(repo.findByEmail(x)).thenReturn(...)</code> lets you simulate any DB state instantly: empty, full, returning a specific row, even throwing an exception. No fixture files, no <code>@Sql</code> scripts.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">③ Verification</div>
+          <p>
+            <code>verify(repo).save(captor.capture())</code> proves your service called the repository correctly, and lets you inspect <em>what</em> it tried to save with an <code>ArgumentCaptor</code>.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">④ Edge cases on demand</div>
+          <p>
+            Simulate "DB throws an exception" with one line: <code>when(repo.save(any())).thenThrow(new RuntimeException(...))</code>. No real database breaking required.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 5: When you don't need it -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">⑤</span>
+          </div>
+          <h2>When You Don't Need Mockito</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Pure unit tests on self-contained code</div>
+          <p>
+            <code>JwtUtilTest</code> in this repo skips Mockito entirely. <code>JwtUtil</code> takes a string secret and returns a string token — no collaborators, no I/O. Plain JUnit + assertions are enough:
+          </p>
+          <div class="code-block">
+            <span class="flag">@Test</span><br>
+            <span class="cmd">void</span> generates_and_validates_token() {<br>
+            &nbsp;&nbsp;String token = jwtUtil.generateToken(<span class="str">"vera@example.com"</span>, <span class="val">1L</span>);<br>
+            &nbsp;&nbsp;<span class="val">assertThat</span>(jwtUtil.validateToken(token)).<span class="val">isTrue</span>();<br>
+            }
+          </div>
+        </div>
+
+        <div class="analogy-box">
+          <div class="analogy-label">Rule of thumb</div>
+          <p>
+            Mock when the class under test depends on something <em>slow, expensive, or non-deterministic</em> (DB, HTTP, time, randomness). Skip it when the class is a self-contained pure function of its inputs.
+          </p>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 6: Flow diagram -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon yellow-bg">
+            <span class="yellow-color">⑥</span>
+          </div>
+          <h2>Putting It Together</h2>
+        </div>
+
+        <div class="analogy-flow">
+          <div class="flow-box" style="border-color: var(--green);">
+            <strong>JUnit</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">finds tests,<br>runs <code>@Test</code> methods</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--yellow);">
+            <strong>MockitoExtension</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">processes @Mock /<br>@InjectMocks before each test</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--yellow);">
+            <strong>Test body</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">when().thenReturn()<br>+ assertions + verify()</span>
+          </div>
+          <div class="arrow">→</div>
+          <div class="flow-box" style="border-color: var(--green);">
+            <strong>JUnit reports</strong><br>
+            <span style="font-size: 11px; color: var(--text-muted);">pass / fail<br>+ assertion message</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-title">Where each tool's responsibility ends</div>
+          <ul>
+            <li><strong>JUnit</strong> never knows the dependencies are fake — it just runs the test method and checks the assertions.</li>
+            <li><strong>Mockito</strong> never knows about <code>@Test</code> — it cares about field-level annotations and the method calls inside the test body.</li>
+            <li><strong>Your code</strong> doesn't know either — <code>AuthService</code> calls <code>userRepository.existsByEmail(...)</code> the same way it would in production. The fake just answers differently.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Section 7: TL;DR -->
+      <div class="section">
+        <div class="section-header">
+          <div class="section-icon green-bg">
+            <span class="green-color">⑦</span>
+          </div>
+          <h2>TL;DR</h2>
+        </div>
+
+        <table class="ref-table">
+          <tr><th>Concept</th><th>What it is</th></tr>
+          <tr><td>JUnit</td><td>Framework that runs tests, provides <code>@Test</code> / <code>@BeforeEach</code> / assertions.</td></tr>
+          <tr><td>Mockito</td><td>Library that creates fake collaborators inside JUnit tests, used via <code>@Mock</code> / <code>@InjectMocks</code>.</td></tr>
+          <tr><td>@ExtendWith(MockitoExtension.class)</td><td>JUnit hook that lets Mockito process annotations.</td></tr>
+          <tr><td>when().thenReturn()</td><td>Script a fake's response to a method call.</td></tr>
+          <tr><td>verify()</td><td>Assert a fake was (or wasn't) called.</td></tr>
+          <tr><td>Skip Mockito when</td><td>The class under test has no slow / expensive / non-deterministic collaborators (e.g., <code>JwtUtil</code>).</td></tr>
+        </table>
+      </div>
+
+      <!-- Takeaway -->
+      <div class="takeaway">
+        <h3>Key Takeaway</h3>
+        <p>
+          JUnit and Mockito don't compete — they complement. JUnit is the stage; Mockito is the stand-in actor. Use JUnit alone for pure functions, JUnit + Mockito when the class under test reaches outward to dependencies you don't want booting up for every test run.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
